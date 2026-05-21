@@ -58,6 +58,10 @@ returning, so \verb{$doc} has meaningful content immediately. After that,
 incoming changes are received asynchronously via a self-chaining promise
 loop, and local changes are flushed periodically via a \code{\link[later:later]{later::later()}}
 timer.
+
+\verb{$close()} does not flush pending local changes. Call \verb{$push()} first if
+you have unsynced edits — otherwise any changes made since the last
+\code{sync}-interval tick may be lost.
 }
 \examples{
 \dontshow{if (interactive()) withAutoprint(\{ # examplesIf}

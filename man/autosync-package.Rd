@@ -57,8 +57,8 @@ server$close()
 \seealso{
 Useful links:
 \itemize{
+  \item \url{https://shikokuchuo.net/autosync/}
   \item \url{https://github.com/shikokuchuo/autosync}
-  \item \url{http://shikokuchuo.net/autosync/}
   \item Report bugs at \url{https://github.com/shikokuchuo/autosync/issues}
 }
 

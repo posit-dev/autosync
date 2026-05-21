@@ -13,8 +13,8 @@ Description: A WebSocket-based synchronization server for Automerge
     sync.automerge.org.  Enables R to serve as a sync hub for JavaScript,
     Rust, and other Automerge clients in collaborative applications.
 License: MIT + file LICENSE
-URL: https://github.com/shikokuchuo/autosync,
-    http://shikokuchuo.net/autosync/
+URL: https://shikokuchuo.net/autosync/,
+    https://github.com/shikokuchuo/autosync
 BugReports: https://github.com/shikokuchuo/autosync/issues
 Depends:
     R (>= 4.4)
