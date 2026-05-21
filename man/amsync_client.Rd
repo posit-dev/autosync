@@ -41,7 +41,7 @@ An environment of class \code{"amsync_client"} with reference semantics,
 containing:
 \describe{
 \item{\code{doc}}{The live automerge document, kept in sync with the server.}
-\item{\code{sync()}}{Push local changes to the server immediately.}
+\item{\code{push()}}{Push local changes to the server immediately.}
 \item{\code{close()}}{Disconnect and stop syncing.}
 \item{\code{active}}{Logical, whether the connection is active.}
 }
@@ -70,7 +70,7 @@ automerge::am_keys(client$doc)
 
 # Make local changes and push
 automerge::am_put(client$doc, automerge::AM_ROOT, "key", "value")
-client$sync()
+client$push()
 
 # Disconnect
 client$close()

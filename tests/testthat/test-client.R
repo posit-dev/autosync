@@ -206,7 +206,7 @@ test_that("amsync_client connects and receives document", {
   )
 })
 
-test_that("amsync_client $sync() pushes local changes to server", {
+test_that("amsync_client $push() pushes local changes to server", {
   data_dir <- tempfile()
   dir.create(data_dir)
   on.exit(unlink(data_dir, recursive = TRUE))
@@ -222,7 +222,7 @@ test_that("amsync_client $sync() pushes local changes to server", {
 
   # Make a local change and push
   automerge::am_put(client$doc, automerge::AM_ROOT, "from_client", "value1")
-  client$sync()
+  client$push()
 
   # Give server time to process
   for (i in seq_len(20)) later::run_now(0.1)

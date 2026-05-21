@@ -24,7 +24,7 @@ format_hex <- function(bytes, max_len = 20L) {
 #'   containing:
 #'   \describe{
 #'     \item{`doc`}{The live automerge document, kept in sync with the server.}
-#'     \item{`sync()`}{Push local changes to the server immediately.}
+#'     \item{`push()`}{Push local changes to the server immediately.}
 #'     \item{`close()`}{Disconnect and stop syncing.}
 #'     \item{`active`}{Logical, whether the connection is active.}
 #'   }
@@ -46,7 +46,7 @@ format_hex <- function(bytes, max_len = 20L) {
 #'
 #' # Make local changes and push
 #' automerge::am_put(client$doc, automerge::AM_ROOT, "key", "value")
-#' client$sync()
+#' client$push()
 #'
 #' # Disconnect
 #' client$close()
@@ -252,7 +252,7 @@ amsync_client <- function(
 
   # --- Methods ---
 
-  client$sync <- send_sync
+  client$push <- send_sync
 
   client$close <- function() {
     if (!client$active) return(invisible())
