@@ -4,15 +4,7 @@
 \alias{amsync_client}
 \title{Create a persistent sync client}
 \usage{
-amsync_client(
-  url,
-  doc_id,
-  timeout = 5000L,
-  tls = NULL,
-  token = NULL,
-  verbose = FALSE,
-  sync = 1
-)
+amsync_client(url, doc_id, timeout = 5000L, tls = NULL, token = NULL, sync = 1)
 }
 \arguments{
 \item{url}{WebSocket URL of the sync server (e.g., "ws://localhost:3030/"
@@ -29,8 +21,6 @@ created by \code{\link[nanonext:tls_config]{nanonext::tls_config()}}.}
 \item{token}{(optional) JWT (ID token) for authenticated servers.
 Sent as a Bearer token in the Authorization header of the WebSocket
 upgrade request.}
-
-\item{verbose}{Logical, print debug messages. Default FALSE.}
 
 \item{sync}{Sync interval in seconds for pushing local changes to the
 server. Default 1. Uses \code{\link[later:later]{later::later()}} to periodically check for and

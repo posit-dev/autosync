@@ -122,16 +122,11 @@ amsync_client <- function(
   timeout = 5000L,
   tls = NULL,
   token = NULL,
-  verbose = FALSE,
   sync = 1
 ) {
   doc <- am_create()
   sync_state <- am_sync_state()
   peer_id <- generate_peer_id()
-
-  if (verbose) {
-    message("[CLIENT] Connecting to ", url)
-  }
 
   s <- stream(
     dial = url,
@@ -145,9 +140,6 @@ amsync_client <- function(
 
   send_msg(s, join_msg(peer_id))
 
-  if (verbose) {
-    message("[CLIENT] Waiting for peer response...")
-  }
   peer_raw <- recv_msg(s, timeout = timeout)
 
   if (inherits(peer_raw, "errorValue")) {
@@ -163,9 +155,6 @@ amsync_client <- function(
   }
 
   server_peer_id <- peer_msg$senderId
-  if (verbose) {
-    message("[CLIENT] Server peer ID: ", server_peer_id)
-  }
 
   # --- Send initial request ---
 
@@ -203,7 +192,6 @@ amsync_client <- function(
   if (!sync_received) {
     stop("No sync response from server within ", timeout, "ms")
   }
-  if (verbose) message("[CLIENT] Initial sync complete")
 
   # --- Build client environment ---
 
@@ -216,7 +204,6 @@ amsync_client <- function(
   client$doc_id <- doc_id
   client$sync_state <- sync_state
   client$sync_timer <- NULL
-  client$verbose <- verbose
 
   # Helper: send a sync message for local changes
   send_sync <- function() {
@@ -232,7 +219,6 @@ amsync_client <- function(
           sync_data
         )
       )
-      if (client$verbose) message("[CLIENT] Sent sync data")
     }
   }
 
@@ -324,9 +310,6 @@ amsync_client <- function(
       client$sync_timer <- NULL
     }
     close(client$stream)
-    if (client$verbose) {
-      message("[CLIENT] Connection closed")
-    }
     invisible()
   }
 
