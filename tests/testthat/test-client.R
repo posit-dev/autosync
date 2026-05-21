@@ -180,6 +180,131 @@ test_that("amsync_fetch warns when no sync messages received", {
   )
 })
 
+# amsync_client() tests
+
+test_that("amsync_client connects and receives document", {
+  data_dir <- tempfile()
+  dir.create(data_dir)
+  on.exit(unlink(data_dir, recursive = TRUE))
+
+  server <- amsync_server(data_dir = data_dir)
+  server$start()
+  on.exit(server$close(), add = TRUE)
+
+  doc_id <- create_document(server)
+  doc <- get_document(server, doc_id)
+  automerge::am_put(doc, automerge::AM_ROOT, "greeting", "hello")
+
+  client <- amsync_client(server$url, doc_id)
+  on.exit(client$close(), add = TRUE)
+
+  expect_s3_class(client, "amsync_client")
+  expect_true(client$active)
+  expect_equal(
+    automerge::am_get(client$doc, automerge::AM_ROOT, "greeting"),
+    "hello"
+  )
+})
+
+test_that("amsync_client $sync() pushes local changes to server", {
+  data_dir <- tempfile()
+  dir.create(data_dir)
+  on.exit(unlink(data_dir, recursive = TRUE))
+
+  server <- amsync_server(data_dir = data_dir)
+  server$start()
+  on.exit(server$close(), add = TRUE)
+
+  doc_id <- create_document(server)
+
+  client <- amsync_client(server$url, doc_id)
+  on.exit(client$close(), add = TRUE)
+
+  # Make a local change and push
+  automerge::am_put(client$doc, automerge::AM_ROOT, "from_client", "value1")
+  client$sync()
+
+  # Give server time to process
+  for (i in seq_len(20)) later::run_now(0.1)
+
+  server_doc <- get_document(server, doc_id)
+  expect_equal(
+    automerge::am_get(server_doc, automerge::AM_ROOT, "from_client"),
+    "value1"
+  )
+})
+
+test_that("amsync_client receives server-side changes", {
+  data_dir <- tempfile()
+  dir.create(data_dir)
+  on.exit(unlink(data_dir, recursive = TRUE))
+
+  server <- amsync_server(data_dir = data_dir)
+  server$start()
+  on.exit(server$close(), add = TRUE)
+
+  doc_id <- create_document(server)
+
+  client <- amsync_client(server$url, doc_id)
+  on.exit(client$close(), add = TRUE)
+
+  # Make a change on the server side and sync to client via a second client
+  server_doc <- get_document(server, doc_id)
+  automerge::am_put(server_doc, automerge::AM_ROOT, "server_key", "server_val")
+
+  # Use a second fetch to trigger broadcast_sync on the server
+  fetched <- amsync_fetch(server$url, doc_id, timeout = 2000L)
+
+  # Give the async receive loop time to process
+  for (i in seq_len(30)) later::run_now(0.1)
+
+  expect_equal(
+    automerge::am_get(client$doc, automerge::AM_ROOT, "server_key"),
+    "server_val"
+  )
+})
+
+test_that("amsync_client $close() stops the client", {
+  data_dir <- tempfile()
+  dir.create(data_dir)
+  on.exit(unlink(data_dir, recursive = TRUE))
+
+  server <- amsync_server(data_dir = data_dir)
+  server$start()
+  on.exit(server$close(), add = TRUE)
+
+  doc_id <- create_document(server)
+
+  client <- amsync_client(server$url, doc_id)
+  expect_true(client$active)
+
+  client$close()
+  expect_false(client$active)
+
+  # Calling close again is a no-op
+  expect_silent(client$close())
+})
+
+test_that("print.amsync_client displays info", {
+  data_dir <- tempfile()
+  dir.create(data_dir)
+  on.exit(unlink(data_dir, recursive = TRUE))
+
+  server <- amsync_server(data_dir = data_dir)
+  server$start()
+  on.exit(server$close(), add = TRUE)
+
+  doc_id <- create_document(server)
+
+  client <- amsync_client(server$url, doc_id)
+  on.exit(client$close(), add = TRUE)
+
+  output <- capture.output(print(client))
+  expect_true(any(grepl("Automerge Sync Client", output)))
+  expect_true(any(grepl(doc_id, output, fixed = TRUE)))
+  expect_true(any(grepl("Active: TRUE", output)))
+})
+
 test_that("amsync_fetch returns empty document for new document ID", {
   data_dir <- tempfile()
   dir.create(data_dir)

@@ -8,6 +8,281 @@ format_hex <- function(bytes, max_len = 20L) {
   )
 }
 
+#' Create a persistent sync client
+#'
+#' Connects to an automerge-repo sync server and maintains a persistent
+#' WebSocket connection for continuous document synchronization. Unlike
+#' [amsync_fetch()], which performs a one-off retrieval, this client stays
+#' connected and receives real-time updates from other peers.
+#'
+#' @inheritParams amsync_fetch
+#' @param sync Sync interval in seconds for pushing local changes to the
+#'   server. Default 1. Uses [later::later()] to periodically check for and
+#'   send local changes. This is a cheap no-op when there are no changes.
+#'
+#' @return An environment of class `"amsync_client"` with reference semantics,
+#'   containing:
+#'   \describe{
+#'     \item{`doc`}{The live automerge document, kept in sync with the server.}
+#'     \item{`sync()`}{Push local changes to the server immediately.}
+#'     \item{`close()`}{Disconnect and stop syncing.}
+#'     \item{`active`}{Logical, whether the connection is active.}
+#'   }
+#'
+#' @details
+#' The client performs a synchronous handshake and initial sync before
+#' returning, so `$doc` has meaningful content immediately. After that,
+#' incoming changes are received asynchronously via a self-chaining promise
+#' loop, and local changes are flushed periodically via a [later::later()]
+#' timer.
+#'
+#' @examplesIf interactive()
+#' server <- amsync_server()
+#' server$start()
+#' doc_id <- create_document(server)
+#'
+#' client <- amsync_client(server$url, doc_id)
+#' automerge::am_keys(client$doc)
+#'
+#' # Make local changes and push
+#' automerge::am_put(client$doc, automerge::AM_ROOT, "key", "value")
+#' client$sync()
+#'
+#' # Disconnect
+#' client$close()
+#' server$close()
+#'
+#' @export
+amsync_client <- function(
+  url,
+  doc_id,
+  timeout = 5000L,
+  tls = NULL,
+
+  token = NULL,
+  verbose = FALSE,
+  sync = 1
+) {
+  doc <- am_create()
+  sync_state <- am_sync_state()
+  peer_id <- generate_peer_id()
+
+  if (verbose) message("[CLIENT] Connecting to ", url)
+
+  headers <- if (!is.null(token)) {
+    c(Authorization = paste("Bearer", token))
+  }
+
+  s <- stream(
+    dial = url,
+    tls = tls,
+    textframes = FALSE,
+    headers = headers
+  )
+
+  # --- Synchronous handshake ---
+
+  join <- list(
+    type = "join",
+    senderId = peer_id,
+    peerMetadata = list(isEphemeral = TRUE),
+    supportedProtocolVersions = list("1")
+  )
+  send(s, cborenc(join), mode = "raw", block = TRUE)
+
+  if (verbose) message("[CLIENT] Waiting for peer response...")
+  aio <- recv_aio(s, mode = "raw", timeout = timeout)
+  while (unresolved(aio)) run_now(1L)
+  peer_raw <- aio$data
+
+  if (inherits(peer_raw, "errorValue")) {
+    close(s)
+    stop("Failed to receive peer response: ", peer_raw)
+  }
+
+  peer_msg <- cbordec(peer_raw)
+  if (peer_msg$type == "error") {
+    close(s)
+    stop("Server error: ", peer_msg$message)
+  }
+  if (peer_msg$type != "peer") {
+    close(s)
+    stop("Expected peer message, got: ", peer_msg$type)
+  }
+
+  server_peer_id <- peer_msg$senderId
+  if (verbose) message("[CLIENT] Server peer ID: ", server_peer_id)
+
+  # --- Send initial request ---
+
+  sync_data <- am_sync_encode(doc, sync_state)
+  request <- list(
+    type = "request",
+    senderId = peer_id,
+    targetId = server_peer_id,
+    documentId = doc_id,
+    data = sync_data %||% raw(0)
+  )
+  send(s, cborenc(request), mode = "raw", block = TRUE)
+
+  # --- Blocking initial sync ---
+
+  aio <- recv_aio(s, mode = "raw", timeout = timeout)
+  while (unresolved(aio)) run_now(1L)
+  result <- aio$data
+
+  if (!inherits(result, "errorValue")) {
+    msg <- cbordec(result)
+    if (msg$type == "sync" && length(msg$data)) {
+      tryCatch(
+        am_sync_decode(doc, sync_state, msg$data),
+        error = function(e) warning("[CLIENT] am_sync_decode error: ", conditionMessage(e))
+      )
+      reply_data <- am_sync_encode(doc, sync_state)
+      if (!is.null(reply_data)) {
+        response <- list(
+          type = "sync",
+          senderId = peer_id,
+          targetId = server_peer_id,
+          documentId = doc_id,
+          data = reply_data
+        )
+        send(s, cborenc(response), mode = "raw", block = TRUE)
+      }
+    } else if (msg$type == "error") {
+      close(s)
+      stop("Server error: ", msg$message)
+    } else if (msg$type == "doc-unavailable") {
+      close(s)
+      stop("Document not available on server: ", doc_id)
+    }
+    if (verbose) message("[CLIENT] Initial sync complete")
+  }
+
+  # --- Build client environment ---
+
+  client <- new.env(parent = emptyenv())
+  client$doc <- doc
+  client$active <- TRUE
+  client$stream <- s
+  client$peer_id <- peer_id
+  client$server_peer_id <- server_peer_id
+  client$doc_id <- doc_id
+  client$sync_state <- sync_state
+  client$sync_timer <- NULL
+  client$verbose <- verbose
+
+  # Helper: send a sync message for local changes
+  send_sync <- function() {
+    sync_data <- am_sync_encode(client$doc, client$sync_state)
+    if (!is.null(sync_data)) {
+      response <- list(
+        type = "sync",
+        senderId = client$peer_id,
+        targetId = client$server_peer_id,
+        documentId = client$doc_id,
+        data = sync_data
+      )
+      send(client$stream, cborenc(response), mode = "raw", block = TRUE)
+      if (client$verbose) message("[CLIENT] Sent sync data")
+    }
+  }
+
+  # Helper: process an incoming message
+  process_message <- function(raw_data) {
+    msg <- tryCatch(cbordec(raw_data), error = function(e) NULL)
+    if (is.null(msg)) return()
+
+    if (msg$type == "sync" &&
+        !is.null(msg$documentId) && msg$documentId == client$doc_id) {
+      if (length(msg$data)) {
+        tryCatch(
+          am_sync_decode(client$doc, client$sync_state, msg$data),
+          error = function(e) warning("[CLIENT] am_sync_decode error: ", conditionMessage(e))
+        )
+      }
+      reply_data <- am_sync_encode(client$doc, client$sync_state)
+      if (!is.null(reply_data)) {
+        response <- list(
+          type = "sync",
+          senderId = client$peer_id,
+          targetId = client$server_peer_id,
+          documentId = client$doc_id,
+          data = reply_data
+        )
+        send(client$stream, cborenc(response), mode = "raw", block = TRUE)
+      }
+    } else if (msg$type == "error") {
+      warning("Server error: ", msg$message)
+    } else if (msg$type == "doc-unavailable") {
+      warning("Document not available on server: ", client$doc_id)
+    }
+  }
+
+  # --- Async receive loop (self-chaining promises) ---
+
+  recv_loop <- function() {
+    if (!client$active) return()
+    aio <- recv_aio(client$stream, mode = "raw")
+    promises::then(
+      aio,
+      onFulfilled = function(value) {
+        process_message(value)
+        recv_loop()
+      },
+      onRejected = function(err) {
+        client$active <- FALSE
+      }
+    )
+    invisible()
+  }
+
+  # --- Periodic sync loop (outgoing local changes) ---
+
+  sync_loop <- function() {
+    if (!client$active) return()
+    client$sync_timer <- later(function() {
+      if (!client$active) return()
+      tryCatch(send_sync(), error = function(e) {
+        client$active <- FALSE
+      })
+      sync_loop()
+    }, delay = sync)
+  }
+
+  # --- Methods ---
+
+  client$sync <- send_sync
+
+  client$close <- function() {
+    if (!client$active) return(invisible())
+    client$active <- FALSE
+    if (!is.null(client$sync_timer)) {
+      client$sync_timer()
+      client$sync_timer <- NULL
+    }
+    close(client$stream)
+    if (client$verbose) message("[CLIENT] Connection closed")
+    invisible()
+  }
+
+  class(client) <- "amsync_client"
+
+  # Start the async loops
+  recv_loop()
+  sync_loop()
+
+  client
+}
+
+#' @export
+print.amsync_client <- function(x, ...) {
+  cat("Automerge Sync Client\n")
+  cat("  Document:", x$doc_id, "\n")
+  cat("  Active:", x$active, "\n")
+  invisible(x)
+}
+
 #' Fetch a document from a sync server
 #'
 #' Connects to an automerge-repo sync server and retrieves a document by ID.
