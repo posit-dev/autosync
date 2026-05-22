@@ -13,7 +13,7 @@ amsync_token(
   client_secret = Sys.getenv("OIDC_CLIENT_SECRET"),
   issuer = oidc_issuer(),
   scopes = "openid email",
-  redirect_uri = "http://localhost:5173",
+  redirect_uri = "http://localhost:0",
   timeout = 120
 )
 ```
@@ -43,8 +43,12 @@ amsync_token(
 - redirect_uri:
 
   Local redirect URI for the OAuth callback. Default
-  `"http://localhost:5173"`. Must match the redirect URI registered with
-  the OIDC provider.
+  `"http://localhost:0"` binds to an OS-assigned ephemeral port (as
+  recommended by RFC 8252 for native apps), which works with OIDC
+  clients registered as "Desktop app" / loopback-IP types that accept
+  any port. Supply an explicit port (e.g. `"http://localhost:8080"`)
+  when your OIDC provider requires the redirect URI to match a
+  pre-registered value.
 
 - timeout:
 
