@@ -57,9 +57,35 @@ server$url
 
 Enable OIDC authentication to restrict access. The defaults point to
 Google, but any OIDC-compliant provider (Microsoft Entra, Okta, Auth0,
-etc.) can be used by setting the `issuer` argument. Set the
-`OIDC_CLIENT_ID` and `OIDC_CLIENT_SECRET` environment variables (e.g. in
-`.Renviron`) for your OAuth credentials:
+etc.) can be used by setting the `issuer` argument.
+
+Register your OAuth client as a **“Desktop app”** and set the
+`OIDC_CLIENT_ID` and `OIDC_CLIENT_SECRET` environment variables (e.g. in
+`.Renviron`):
+
+``` r
+
+# .Renviron
+OIDC_CLIENT_ID=YOUR_CLIENT_ID
+OIDC_CLIENT_SECRET=YOUR_CLIENT_SECRET
+```
+
+Google issues a client secret for Desktop app clients and requires it in
+the token exchange, but — unlike a “Web application” secret — it is not
+treated as confidential: it is designed to be distributed with installed
+apps, so it is safe to keep in `.Renviron`. Google states that for
+installed apps “the client secret is obviously not treated as a secret”
+([Google OAuth 2.0
+docs](https://developers.google.com/identity/protocols/oauth2#installed)),
+consistent with the OAuth 2.0 for Native Apps standard ([RFC 8252
+§8.5](https://datatracker.ietf.org/doc/html/rfc8252#section-8.5)). The
+interactive flow also uses PKCE, so the secret alone does not grant
+access.
+
+Other providers (Microsoft Entra, Okta, Auth0, etc.) can register the
+client as a **native / public client**, which authenticates via PKCE
+alone — for those, set only `OIDC_CLIENT_ID` and leave
+`OIDC_CLIENT_SECRET` unset.
 
 ``` r
 

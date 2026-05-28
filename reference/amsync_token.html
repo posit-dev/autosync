@@ -50,7 +50,7 @@ authenticate, and returns the ID token for use with <code><a href="amsync_fetch.
 <span>  client_secret <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv</a></span><span class="op">(</span><span class="st">"OIDC_CLIENT_SECRET"</span><span class="op">)</span>,</span>
 <span>  issuer <span class="op">=</span> <span class="fu"><a href="oidc_issuer.html">oidc_issuer</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  scopes <span class="op">=</span> <span class="st">"openid email"</span>,</span>
-<span>  redirect_uri <span class="op">=</span> <span class="st">"http://localhost:0"</span>,</span>
+<span>  redirect_uri <span class="op">=</span> <span class="st">"http://127.0.0.1:0"</span>,</span>
 <span>  timeout <span class="op">=</span> <span class="fl">120</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -65,9 +65,10 @@ authenticate, and returns the ID token for use with <code><a href="amsync_fetch.
 
 
 <dt id="arg-client-secret">client_secret<a class="anchor" aria-label="anchor" href="#arg-client-secret"></a></dt>
-<dd><p>The OIDC client secret. Required for "Web application"
-client types. Not needed for "Desktop app" client types (which use PKCE
-only). Defaults to the <code>OIDC_CLIENT_SECRET</code> environment variable.</p></dd>
+<dd><p>The OIDC client secret. Required by Google (Desktop
+app) and "Web application" client types; leave unset for native / public
+clients, which authenticate via PKCE alone. Defaults to the
+<code>OIDC_CLIENT_SECRET</code> environment variable.</p></dd>
 
 
 <dt id="arg-issuer">issuer<a class="anchor" aria-label="anchor" href="#arg-issuer"></a></dt>
@@ -83,11 +84,13 @@ environment variable, falling back to Google
 
 <dt id="arg-redirect-uri">redirect_uri<a class="anchor" aria-label="anchor" href="#arg-redirect-uri"></a></dt>
 <dd><p>Local redirect URI for the OAuth callback. Default
-<code>"http://localhost:0"</code> binds to an OS-assigned ephemeral port (as
-recommended by RFC 8252 for native apps), which works with OIDC clients
-registered as "Desktop app" / loopback-IP types that accept any port.
-Supply an explicit port (e.g. <code>"http://localhost:8080"</code>) when your OIDC
-provider requires the redirect URI to match a pre-registered value.</p></dd>
+<code>"http://127.0.0.1:0"</code> uses the loopback IP literal (recommended over
+<code>localhost</code> by RFC 8252 section 8.3, since <code>localhost</code> resolution can be
+reconfigured via DNS or the hosts file) with an OS-assigned ephemeral
+port, which works with OIDC clients registered as "Desktop app" /
+loopback-IP types that accept any port. Supply an explicit port (e.g.
+<code>"http://127.0.0.1:8080"</code>) when your OIDC provider requires the redirect
+URI to match a pre-registered value.</p></dd>
 
 
 <dt id="arg-timeout">timeout<a class="anchor" aria-label="anchor" href="#arg-timeout"></a></dt>
@@ -98,6 +101,20 @@ Default 120.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A JWT (ID token) as a character string.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>For Google, register the OAuth client as a "Desktop app" and set both
+<code>OIDC_CLIENT_ID</code> and <code>OIDC_CLIENT_SECRET</code>. Google's Desktop app secret is
+required in the token exchange but, unlike a "Web application" secret, is
+not treated as confidential: Google states that for installed apps "the
+client secret is obviously not treated as a secret"
+(<a href="https://developers.google.com/identity/protocols/oauth2#installed" class="external-link">https://developers.google.com/identity/protocols/oauth2#installed</a>),
+consistent with the OAuth 2.0 for Native Apps standard
+(RFC 8252 section 8.5,
+<a href="https://datatracker.ietf.org/doc/html/rfc8252#section-8.5" class="external-link">https://datatracker.ietf.org/doc/html/rfc8252#section-8.5</a>).
+Providers that support native / public clients (Microsoft Entra, Okta,
+Auth0, etc.) need only <code>client_id</code>, authenticating via PKCE alone.</p>
     </div>
 
     <div class="section level2">

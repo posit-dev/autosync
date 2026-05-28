@@ -35,11 +35,14 @@ auth_config(
 
 - allowed_emails:
 
-  Character vector of allowed email addresses.
+  Character vector of allowed email addresses. When set, a token is
+  rejected unless it carries an `email` claim with `email_verified`
+  explicitly `TRUE`.
 
 - allowed_domains:
 
   Character vector of allowed email domains (e.g., "mycompany.com").
+  Subject to the same verified-email requirement as `allowed_emails`.
 
 - custom_validator:
 
@@ -126,7 +129,7 @@ auth_config(
 #> $custom_validator
 #> function (claims) 
 #> "editors" %in% claims$groups
-#> <environment: 0x564517df1970>
+#> <environment: 0x55b92efc8940>
 #> 
 #> attr(,"class")
 #> [1] "amsync_auth_config"
