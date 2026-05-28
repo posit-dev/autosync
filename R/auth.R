@@ -213,12 +213,12 @@ validate_token <- function(
   }
 
   # Validate issuer
-  if (is.null(claims$iss) || claims$iss != issuer) {
+  if (is.null(claims[["iss"]]) || claims[["iss"]] != issuer) {
     return(list(valid = FALSE, email = NULL, error = "Invalid token issuer"))
   }
 
   # Validate audience
-  aud <- claims$aud
+  aud <- claims[["aud"]]
   if (is.null(aud) || !client_id %in% aud) {
     return(list(valid = FALSE, email = NULL, error = "Invalid token audience"))
   }
@@ -226,12 +226,16 @@ validate_token <- function(
   # Validate expiry
   now <- as.numeric(Sys.time())
   clock_skew <- 30
-  if (is.null(claims$exp) || as.numeric(claims$exp) < now - clock_skew) {
+  if (
+    is.null(claims[["exp"]]) || as.numeric(claims[["exp"]]) < now - clock_skew
+  ) {
     return(list(valid = FALSE, email = NULL, error = "Token expired"))
   }
 
   # Validate issued-at
-  if (!is.null(claims$iat) && as.numeric(claims$iat) > now + clock_skew) {
+  if (
+    !is.null(claims[["iat"]]) && as.numeric(claims[["iat"]]) > now + clock_skew
+  ) {
     return(list(
       valid = FALSE,
       email = NULL,
@@ -239,16 +243,34 @@ validate_token <- function(
     ))
   }
 
+  email <- claims[["email"]]
+
   # Check email_verified if present
-  if (isFALSE(claims$email_verified)) {
+  if (isFALSE(claims[["email_verified"]])) {
     return(list(
       valid = FALSE,
-      email = claims$email,
+      email = email,
       error = "Email not verified"
     ))
   }
 
-  email <- claims$email
+  # An allowlist requires a present email and email_verified == TRUE.
+  if (!is.null(allowed_emails) || !is.null(allowed_domains)) {
+    if (is.null(email) || !nzchar(email)) {
+      return(list(
+        valid = FALSE,
+        email = NULL,
+        error = "Token has no email claim"
+      ))
+    }
+    if (!isTRUE(claims[["email_verified"]])) {
+      return(list(
+        valid = FALSE,
+        email = email,
+        error = "Email not verified"
+      ))
+    }
+  }
 
   if (!is.null(allowed_emails)) {
     if (!email %in% allowed_emails) {
@@ -298,9 +320,12 @@ validate_token <- function(
 #'   (`"https://accounts.google.com"`).
 #' @param client_id The OIDC client ID (application ID). Validated against the
 #'   `aud` claim in JWTs. Defaults to the `OIDC_CLIENT_ID` environment variable.
-#' @param allowed_emails Character vector of allowed email addresses.
+#' @param allowed_emails Character vector of allowed email addresses. When set,
+#'   a token is rejected unless it carries an `email` claim with
+#'   `email_verified` explicitly `TRUE`.
 #' @param allowed_domains Character vector of allowed email domains
-#'   (e.g., "mycompany.com").
+#'   (e.g., "mycompany.com"). Subject to the same verified-email requirement as
+#'   `allowed_emails`.
 #' @param custom_validator Function(claims) returning TRUE/FALSE for
 #'   custom validation logic. Receives the decoded JWT claims as a list.
 #'
@@ -339,8 +364,12 @@ auth_config <- function(
     stop("'issuer' must be a single character string (OIDC issuer URL)")
   }
 
-  if (!is.character(client_id) || length(client_id) != 1L || !nzchar(client_id)) {
-    stop("'client_id' must be set (or set the OIDC_CLIENT_ID environment variable)")
+  if (
+    !is.character(client_id) || length(client_id) != 1L || !nzchar(client_id)
+  ) {
+    stop(
+      "'client_id' must be set (or set the OIDC_CLIENT_ID environment variable)"
+    )
   }
 
   structure(
@@ -361,22 +390,37 @@ auth_config <- function(
 #' (ID token) from an OIDC provider. Opens the system browser for the user to
 #' authenticate, and returns the ID token for use with [amsync_fetch()].
 #'
+#' For Google, register the OAuth client as a "Desktop app" and set both
+#' `OIDC_CLIENT_ID` and `OIDC_CLIENT_SECRET`. Google's Desktop app secret is
+#' required in the token exchange but, unlike a "Web application" secret, is
+#' not treated as confidential: Google states that for installed apps "the
+#' client secret is obviously not treated as a secret"
+#' (<https://developers.google.com/identity/protocols/oauth2#installed>),
+#' consistent with the OAuth 2.0 for Native Apps standard
+#' (RFC 8252 section 8.5,
+#' <https://datatracker.ietf.org/doc/html/rfc8252#section-8.5>).
+#' Providers that support native / public clients (Microsoft Entra, Okta,
+#' Auth0, etc.) need only `client_id`, authenticating via PKCE alone.
+#'
 #' @param client_id The OIDC client ID (application ID). Defaults to the
 #'   `OIDC_CLIENT_ID` environment variable.
-#' @param client_secret The OIDC client secret. Required for "Web application"
-#'   client types. Not needed for "Desktop app" client types (which use PKCE
-#'   only). Defaults to the `OIDC_CLIENT_SECRET` environment variable.
+#' @param client_secret The OIDC client secret. Required by Google (Desktop
+#'   app) and "Web application" client types; leave unset for native / public
+#'   clients, which authenticate via PKCE alone. Defaults to the
+#'   `OIDC_CLIENT_SECRET` environment variable.
 #' @param issuer The OIDC issuer URL. Defaults to the `OIDC_ISSUER`
 #'   environment variable, falling back to Google
 #'   (`"https://accounts.google.com"`).
 #' @param scopes Space-separated OAuth scopes to request. Default
 #'   `"openid email"`.
 #' @param redirect_uri Local redirect URI for the OAuth callback. Default
-#'   `"http://localhost:0"` binds to an OS-assigned ephemeral port (as
-#'   recommended by RFC 8252 for native apps), which works with OIDC clients
-#'   registered as "Desktop app" / loopback-IP types that accept any port.
-#'   Supply an explicit port (e.g. `"http://localhost:8080"`) when your OIDC
-#'   provider requires the redirect URI to match a pre-registered value.
+#'   `"http://127.0.0.1:0"` uses the loopback IP literal (recommended over
+#'   `localhost` by RFC 8252 section 8.3, since `localhost` resolution can be
+#'   reconfigured via DNS or the hosts file) with an OS-assigned ephemeral
+#'   port, which works with OIDC clients registered as "Desktop app" /
+#'   loopback-IP types that accept any port. Supply an explicit port (e.g.
+#'   `"http://127.0.0.1:8080"`) when your OIDC provider requires the redirect
+#'   URI to match a pre-registered value.
 #' @param timeout Seconds to wait for the user to complete authentication.
 #'   Default 120.
 #'
@@ -401,15 +445,19 @@ amsync_token <- function(
   client_secret = Sys.getenv("OIDC_CLIENT_SECRET"),
   issuer = oidc_issuer(),
   scopes = "openid email",
-  redirect_uri = "http://localhost:0",
+  redirect_uri = "http://127.0.0.1:0",
   timeout = 120
 ) {
   if (!is_interactive()) {
     stop("amsync_token() requires an interactive session")
   }
 
-  if (!is.character(client_id) || length(client_id) != 1L || !nzchar(client_id)) {
-    stop("'client_id' must be set (or set the OIDC_CLIENT_ID environment variable)")
+  if (
+    !is.character(client_id) || length(client_id) != 1L || !nzchar(client_id)
+  ) {
+    stop(
+      "'client_id' must be set (or set the OIDC_CLIENT_ID environment variable)"
+    )
   }
 
   # Discover OIDC endpoints
@@ -430,8 +478,7 @@ amsync_token <- function(
     )
   }
 
-  # PKCE: code_verifier is a 64-char hex string, code_challenge is its
-  # base64url-encoded SHA-256 hash
+  # PKCE: challenge is the base64url-encoded SHA-256 of the verifier
   code_verifier <- random(32)
   code_challenge <- jose::base64url_encode(sha256(
     code_verifier,
@@ -443,7 +490,13 @@ amsync_token <- function(
 
   # Parse redirect_uri into server URL and handler path
   parts <- nanonext::parse_url(redirect_uri)
-  server_url <- paste0(parts[["scheme"]], "://", parts[["hostname"]], ":", parts[["port"]])
+  server_url <- paste0(
+    parts[["scheme"]],
+    "://",
+    parts[["hostname"]],
+    ":",
+    parts[["port"]]
+  )
   handler_path <- if (nzchar(parts[["path"]])) parts[["path"]] else "/"
   ephemeral_port <- parts[["port"]] == "0"
 
@@ -487,13 +540,14 @@ amsync_token <- function(
   server$start()
   on.exit(server$close())
 
-  # When an ephemeral port was requested, splice the actual bound port back
-  # into redirect_uri so the value sent to the OIDC provider (and echoed in
-  # the token exchange) matches the port the callback server is listening on.
+  # Splice the actual bound port into redirect_uri to match the listener.
   if (ephemeral_port) {
     bound <- nanonext::parse_url(server$url)
     redirect_uri <- sub(
-      ":0", paste0(":", bound[["port"]]), redirect_uri, fixed = TRUE
+      ":0",
+      paste0(":", bound[["port"]]),
+      redirect_uri,
+      fixed = TRUE
     )
   }
 
@@ -542,10 +596,12 @@ amsync_token <- function(
     utils::URLencode(auth_result$code, reserved = TRUE),
     "&client_id=",
     utils::URLencode(client_id, reserved = TRUE),
-    if (nzchar(client_secret)) paste0(
-      "&client_secret=",
-      utils::URLencode(client_secret, reserved = TRUE)
-    ),
+    if (nzchar(client_secret)) {
+      paste0(
+        "&client_secret=",
+        utils::URLencode(client_secret, reserved = TRUE)
+      )
+    },
     "&redirect_uri=",
     utils::URLencode(redirect_uri, reserved = TRUE),
     "&grant_type=authorization_code",

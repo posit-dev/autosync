@@ -22,10 +22,13 @@ environment variable, falling back to Google
 \item{client_id}{The OIDC client ID (application ID). Validated against the
 \code{aud} claim in JWTs. Defaults to the \code{OIDC_CLIENT_ID} environment variable.}
 
-\item{allowed_emails}{Character vector of allowed email addresses.}
+\item{allowed_emails}{Character vector of allowed email addresses. When set,
+a token is rejected unless it carries an \code{email} claim with
+\code{email_verified} explicitly \code{TRUE}.}
 
 \item{allowed_domains}{Character vector of allowed email domains
-(e.g., "mycompany.com").}
+(e.g., "mycompany.com"). Subject to the same verified-email requirement as
+\code{allowed_emails}.}
 
 \item{custom_validator}{Function(claims) returning TRUE/FALSE for
 custom validation logic. Receives the decoded JWT claims as a list.}
