@@ -424,6 +424,79 @@ test_that("validate_token rejects email not in allowlist", {
   expect_equal(result$error, "Email not in allowlist")
 })
 
+test_that("validate_token rejects missing email claim when allowlist is set", {
+  key <- openssl::rsa_keygen(2048)
+  pubkey <- as.list(key)$pubkey
+  claims <- valid_claims()
+  claims$email <- NULL
+  jwt <- create_test_jwt(claims, key)
+
+  local_mocked_bindings(
+    get_signing_key = function(issuer, kid) pubkey
+  )
+
+  result_emails <- validate_token(
+    token = jwt,
+    issuer = "https://accounts.google.com",
+    client_id = "test-client-id",
+    allowed_emails = c("alice@test.com")
+  )
+  expect_false(result_emails$valid)
+  expect_equal(result_emails$error, "Token has no email claim")
+
+  result_domains <- validate_token(
+    token = jwt,
+    issuer = "https://accounts.google.com",
+    client_id = "test-client-id",
+    allowed_domains = c("test.com")
+  )
+  expect_false(result_domains$valid)
+  expect_equal(result_domains$error, "Token has no email claim")
+})
+
+test_that("validate_token requires verified email when allowlist is set", {
+  key <- openssl::rsa_keygen(2048)
+  pubkey <- as.list(key)$pubkey
+  # email_verified absent (not explicitly TRUE)
+  claims <- valid_claims(email = "alice@test.com")
+  claims$email_verified <- NULL
+  jwt <- create_test_jwt(claims, key)
+
+  local_mocked_bindings(
+    get_signing_key = function(issuer, kid) pubkey
+  )
+
+  result <- validate_token(
+    token = jwt,
+    issuer = "https://accounts.google.com",
+    client_id = "test-client-id",
+    allowed_emails = c("alice@test.com")
+  )
+  expect_false(result$valid)
+  expect_equal(result$error, "Email not verified")
+})
+
+test_that("validate_token allows unverified email when no allowlist is set", {
+  key <- openssl::rsa_keygen(2048)
+  pubkey <- as.list(key)$pubkey
+  # email_verified absent, no allowlist -> not gated on email, so accepted
+  claims <- valid_claims(email = "alice@test.com")
+  claims$email_verified <- NULL
+  jwt <- create_test_jwt(claims, key)
+
+  local_mocked_bindings(
+    get_signing_key = function(issuer, kid) pubkey
+  )
+
+  result <- validate_token(
+    token = jwt,
+    issuer = "https://accounts.google.com",
+    client_id = "test-client-id"
+  )
+  expect_true(result$valid)
+  expect_equal(result$email, "alice@test.com")
+})
+
 test_that("validate_token accepts email in allowlist", {
   key <- openssl::rsa_keygen(2048)
   pubkey <- as.list(key)$pubkey
@@ -1393,16 +1466,16 @@ test_that("amsync_token splices ephemeral port into redirect_uri", {
   )
 
   # Mock http_server returns "http://127.0.0.1:54321"; default redirect_uri is
-  # "http://localhost:0", so the ":0" should be replaced with ":54321" while
-  # preserving the "localhost" hostname.
+  # "http://127.0.0.1:0", so the ":0" should be replaced with ":54321" while
+  # preserving the "127.0.0.1" hostname.
   expect_match(
     captured_auth_url,
-    "redirect_uri=http%3A%2F%2Flocalhost%3A54321",
+    "redirect_uri=http%3A%2F%2F127.0.0.1%3A54321",
     fixed = TRUE
   )
   expect_match(
     captured_token_data,
-    "redirect_uri=http%3A%2F%2Flocalhost%3A54321",
+    "redirect_uri=http%3A%2F%2F127.0.0.1%3A54321",
     fixed = TRUE
   )
   expect_false(grepl(":0", captured_auth_url, fixed = TRUE))

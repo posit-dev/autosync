@@ -9,7 +9,7 @@ amsync_token(
   client_secret = Sys.getenv("OIDC_CLIENT_SECRET"),
   issuer = oidc_issuer(),
   scopes = "openid email",
-  redirect_uri = "http://localhost:0",
+  redirect_uri = "http://127.0.0.1:0",
   timeout = 120
 )
 }
@@ -17,9 +17,10 @@ amsync_token(
 \item{client_id}{The OIDC client ID (application ID). Defaults to the
 \code{OIDC_CLIENT_ID} environment variable.}
 
-\item{client_secret}{The OIDC client secret. Required for "Web application"
-client types. Not needed for "Desktop app" client types (which use PKCE
-only). Defaults to the \code{OIDC_CLIENT_SECRET} environment variable.}
+\item{client_secret}{The OIDC client secret. Required by Google (Desktop
+app) and "Web application" client types; leave unset for native / public
+clients, which authenticate via PKCE alone. Defaults to the
+\code{OIDC_CLIENT_SECRET} environment variable.}
 
 \item{issuer}{The OIDC issuer URL. Defaults to the \code{OIDC_ISSUER}
 environment variable, falling back to Google
@@ -29,11 +30,13 @@ environment variable, falling back to Google
 \code{"openid email"}.}
 
 \item{redirect_uri}{Local redirect URI for the OAuth callback. Default
-\code{"http://localhost:0"} binds to an OS-assigned ephemeral port (as
-recommended by RFC 8252 for native apps), which works with OIDC clients
-registered as "Desktop app" / loopback-IP types that accept any port.
-Supply an explicit port (e.g. \code{"http://localhost:8080"}) when your OIDC
-provider requires the redirect URI to match a pre-registered value.}
+\code{"http://127.0.0.1:0"} uses the loopback IP literal (recommended over
+\code{localhost} by RFC 8252 section 8.3, since \code{localhost} resolution can be
+reconfigured via DNS or the hosts file) with an OS-assigned ephemeral
+port, which works with OIDC clients registered as "Desktop app" /
+loopback-IP types that accept any port. Supply an explicit port (e.g.
+\code{"http://127.0.0.1:8080"}) when your OIDC provider requires the redirect
+URI to match a pre-registered value.}
 
 \item{timeout}{Seconds to wait for the user to complete authentication.
 Default 120.}
@@ -45,6 +48,19 @@ A JWT (ID token) as a character string.
 Performs the OAuth 2.0 Authorization Code flow with PKCE to obtain a JWT
 (ID token) from an OIDC provider. Opens the system browser for the user to
 authenticate, and returns the ID token for use with \code{\link[=amsync_fetch]{amsync_fetch()}}.
+}
+\details{
+For Google, register the OAuth client as a "Desktop app" and set both
+\code{OIDC_CLIENT_ID} and \code{OIDC_CLIENT_SECRET}. Google's Desktop app secret is
+required in the token exchange but, unlike a "Web application" secret, is
+not treated as confidential: Google states that for installed apps "the
+client secret is obviously not treated as a secret"
+(\url{https://developers.google.com/identity/protocols/oauth2#installed}),
+consistent with the OAuth 2.0 for Native Apps standard
+(RFC 8252 section 8.5,
+\url{https://datatracker.ietf.org/doc/html/rfc8252#section-8.5}).
+Providers that support native / public clients (Microsoft Entra, Okta,
+Auth0, etc.) need only \code{client_id}, authenticating via PKCE alone.
 }
 \examples{
 \dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
