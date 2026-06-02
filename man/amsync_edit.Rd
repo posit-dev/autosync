@@ -2,9 +2,9 @@
 % Please edit documentation in R/edit.R
 \name{amsync_edit}
 \alias{amsync_edit}
-\title{Edit a synced text object in your editor}
+\title{Edit a synced text object in a Shiny editor}
 \usage{
-amsync_edit(client, at = "text", editor = NULL, ext = NULL)
+amsync_edit(client, at = "text", ext = NULL)
 }
 \arguments{
 \item{client}{An \code{amsync_client} object (see \code{\link[=amsync_client]{amsync_client()}}) with an
@@ -15,32 +15,32 @@ string (e.g. \code{"text"}) addresses a top-level key; a character vector
 (e.g. \code{c("files", "x")}) navigates nested objects with \code{[[}. Default
 \code{"text"}.}
 
-\item{editor}{Editor command to launch. If \code{NULL} (default), resolved from
-\code{getOption("editor")}, then the \code{VISUAL} and \code{EDITOR} environment
-variables, then a platform fallback. GUI editors must be invoked in a
-blocking mode (e.g. \code{"code --wait"}, \code{"subl -w"}).}
-
-\item{ext}{File extension (including the leading dot, e.g. \code{".md"}) for the
-temporary file, used by editors for syntax highlighting. Default \code{".txt"}.}
+\item{ext}{File extension (e.g. \code{".md"}, with or without the leading dot)
+used to pick the editor's syntax-highlighting language. \code{NULL} (default)
+uses plain text.}
 }
 \value{
 Invisibly returns \code{client}.
 }
 \description{
-Opens a synced Automerge text object in the user's editor. On save, the
-edits are merged back into the live document and pushed to the server,
-preserving any concurrent remote edits that arrived while editing.
+Opens a synced Automerge text object in a Shiny app featuring a
+\code{\link[bslib:input_code_editor]{bslib::input_code_editor()}} component. Clicking \strong{Save} closes the app;
+the edited text is then merged back into the live document and pushed to the
+server, preserving any concurrent remote edits that arrived while editing.
 }
 \details{
-The document is forked at its current snapshot, the text object inside the
-fork is opened in the editor, and on save the fork is merged back into the
-live document. Because Automerge resolves the merge, edits made remotely
-while you were editing are preserved rather than overwritten.
+Requires the \pkg{shiny} and \pkg{bslib} packages.
 
-The temporary file is written and read as raw UTF-8 bytes, so the content
-round-trips faithfully. The original's trailing-newline state is preserved:
-if the text did not end in a newline, any trailing newline(s) the editor
-appended are stripped; if it did, the saved content is left as-is.
+The document is forked at its current snapshot, the text object inside the
+fork is opened in the editor, and on \strong{Save} the fork is merged back into
+the live document. Because Automerge resolves the merge, edits made remotely
+while you were editing are preserved rather than overwritten. Closing the
+app without saving (the \strong{Cancel} button or closing the window) leaves the
+document untouched.
+
+The original's trailing-newline state is preserved: if the text did not end
+in a newline, any trailing newline(s) the editor appended are stripped; if
+it did, the saved content is left as-is.
 }
 \examples{
 \dontshow{if (interactive()) withAutoprint(\{ # examplesIf}

@@ -22,9 +22,9 @@
 #'       document (the caller owns it and must `$close()` it).}
 #'     \item{`edit(path = NULL)`}{Open the file's client, run [amsync_edit()]
 #'       with the extension inferred from the path, then close the client. If
-#'       `path` is `NULL` and interactive, shows the picker first.}
-#'     \item{`browse()`}{Interactive loop: print the tree, pick a file, edit
-#'       it, repeat.}
+#'       `path` is `NULL` and interactive, shows a Shiny file picker first.}
+#'     \item{`browse()`}{Interactive loop: pick a file from a Shiny file
+#'       picker, edit it, then return to the picker; repeat until **Done**.}
 #'     \item{`refresh()`}{Re-fetch the project document to pick up added or
 #'       removed files.}
 #'   }
@@ -37,7 +37,6 @@
 #'
 #' @importFrom automerge am_keys am_text_content
 #' @importFrom tools file_ext
-#' @importFrom utils menu
 #' @export
 amsync_project <- function(
   url,
@@ -92,7 +91,7 @@ amsync_project <- function(
       if (!interactive()) {
         stop("`path` is required in non-interactive sessions")
       }
-      path <- pick_path(proj$paths())
+      path <- pick_path_shiny(proj$paths())
       if (is.null(path)) {
         return(invisible(proj))
       }
@@ -109,8 +108,7 @@ amsync_project <- function(
       stop("`$browse()` requires an interactive session; pass a path to `$edit()`")
     }
     repeat {
-      cat(format_file_tree(proj$paths()))
-      path <- pick_path(proj$paths())
+      path <- pick_path_shiny(proj$paths())
       if (is.null(path)) {
         break
       }
@@ -178,20 +176,73 @@ file_ext_dot <- function(path) {
   if (nzchar(ext)) paste0(".", ext) else ".txt"
 }
 
-#' Interactively pick a path from a menu
+#' Pick a file path from a project's tree in a Shiny app
+#'
+#' Spins up a single-purpose Shiny app presenting the project's file paths as a
+#' radio-button list, with **Edit** and **Done** buttons. Blocks until the app
+#' exits, returning the selected path on **Edit** or `NULL` if the user chose
+#' **Done** or closed the window.
 #'
 #' @param paths Character vector of paths.
 #'
-#' @return The selected path, or `NULL` if the user quit (0).
+#' @return The selected path (character scalar), or `NULL` if not selected.
 #'
 #' @noRd
-pick_path <- function(paths) {
+pick_path_shiny <- function(paths) {
   if (!length(paths)) {
     message("No files in project.")
     return(NULL)
   }
-  choice <- utils::menu(paths, title = "Select a file (0 to quit):")
-  if (choice == 0L) NULL else paths[choice]
+  if (
+    !requireNamespace("shiny", quietly = TRUE) ||
+      !requireNamespace("bslib", quietly = TRUE)
+  ) {
+    stop(
+      "Picking a file interactively requires the 'shiny' and 'bslib' packages.\n",
+      'Install them with install.packages(c("shiny", "bslib")).'
+    )
+  }
+
+  ui <- bslib::page_fillable(
+    title = "amsync_project",
+    padding = 0,
+    bslib::card(
+      bslib::card_header(
+        class = "d-flex justify-content-between align-items-center",
+        shiny::span("Select a file to edit"),
+        shiny::div(
+          class = "d-flex gap-2",
+          shiny::actionButton(
+            "done",
+            "Done",
+            class = "btn-sm btn-outline-secondary"
+          ),
+          shiny::actionButton("edit", "Edit", class = "btn-sm btn-primary")
+        )
+      ),
+      bslib::card_body(
+        shiny::radioButtons("path", label = NULL, choices = paths)
+      )
+    )
+  )
+
+  server <- function(input, output, session) {
+    # Stop exactly once; whichever of Edit / Done / window-close happens first
+    # decides the return value.
+    done <- FALSE
+    finish <- function(value) {
+      if (done) {
+        return()
+      }
+      done <<- TRUE
+      shiny::stopApp(returnValue = value)
+    }
+    shiny::observeEvent(input$edit, finish(input$path))
+    shiny::observeEvent(input$done, finish(NULL))
+    session$onSessionEnded(function() finish(NULL))
+  }
+
+  shiny::runGadget(shiny::shinyApp(ui, server), stopOnCancel = FALSE)
 }
 
 #' Render a set of file paths as an indented tree

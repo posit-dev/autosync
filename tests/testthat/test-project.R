@@ -67,7 +67,7 @@ test_that("amsync_project$edit opens the right file and infers the extension", {
 
   captured <- new.env()
   local_mocked_bindings(
-    amsync_edit = function(client, at = "text", editor = NULL, ext = NULL) {
+    amsync_edit = function(client, at = "text", ext = NULL) {
       captured$ext <- ext
       captured$doc_id <- client$doc_id
       invisible(client)
@@ -100,10 +100,7 @@ test_that("amsync_project$edit performs a real edit and pushes", {
   proj <- amsync_project(server$url, proj_id)
 
   local_mocked_bindings(
-    launch_editor = function(path, editor = NULL) {
-      writeBin(charToRaw("new content"), path)
-      invisible()
-    }
+    edit_in_shiny = function(text, ext = NULL) "new content"
   )
 
   proj$edit("/a/b.md")
@@ -195,4 +192,10 @@ test_that("format_file_tree renders a nested tree", {
 
 test_that("format_file_tree handles the empty case", {
   expect_equal(autosync:::format_file_tree(character(0)), "/\n")
+})
+
+test_that("pick_path_shiny returns NULL for an empty project", {
+  # No files -> short-circuits before launching a Shiny gadget.
+  expect_message(res <- pick_path_shiny(character(0)), "No files in project")
+  expect_null(res)
 })

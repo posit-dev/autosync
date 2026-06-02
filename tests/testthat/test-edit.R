@@ -6,13 +6,13 @@ seed_text_doc <- function(server, content, key = "text") {
   doc_id
 }
 
-# Helper: a launch_editor mock that overwrites the tempfile with `new_content`
-# (optionally running a side effect first, e.g. a concurrent remote edit).
-mock_editor_writes <- function(new_content, side_effect = NULL) {
-  function(path, editor = NULL) {
+# Helper: an edit_in_shiny mock that returns `new_content` (optionally running
+# a side effect first, e.g. a concurrent remote edit). `NULL` content models a
+# cancelled / closed editor.
+mock_editor_returns <- function(new_content, side_effect = NULL) {
+  function(text, ext = NULL) {
     if (!is.null(side_effect)) side_effect()
-    writeBin(charToRaw(enc2utf8(new_content)), path)
-    invisible()
+    new_content
   }
 }
 
@@ -31,7 +31,7 @@ test_that("amsync_edit round-trips edits and pushes to the server", {
   client <- amsync_client(server$url, doc_id)
   on.exit(client$close(), add = TRUE)
 
-  local_mocked_bindings(launch_editor = mock_editor_writes("hello brave world"))
+  local_mocked_bindings(edit_in_shiny = mock_editor_returns("hello brave world"))
 
   expect_message(
     amsync_edit(client, at = "text"),
@@ -73,7 +73,7 @@ test_that("amsync_edit preserves a concurrent remote edit", {
     automerge::am_text_splice(client$doc[["text"]], 0L, 0L, ">> ")
   }
   local_mocked_bindings(
-    launch_editor = mock_editor_writes("hello brave world", remote_edit)
+    edit_in_shiny = mock_editor_returns("hello brave world", remote_edit)
   )
 
   amsync_edit(client, at = "text")
@@ -98,12 +98,41 @@ test_that("amsync_edit is a no-op when the content is unchanged", {
   client <- amsync_client(server$url, doc_id)
   on.exit(client$close(), add = TRUE)
 
-  # Editor leaves the file exactly as written.
-  local_mocked_bindings(launch_editor = function(path, editor = NULL) invisible())
+  # Editor returns the content unchanged.
+  local_mocked_bindings(edit_in_shiny = function(text, ext = NULL) text)
 
   expect_message(
     res <- amsync_edit(client, at = "text"),
     "No changes."
+  )
+  expect_identical(res, client)
+  expect_equal(
+    automerge::am_text_content(client$doc[["text"]]),
+    "unchanged"
+  )
+})
+
+test_that("amsync_edit is a no-op when the editor is cancelled", {
+  skip_on_cran()
+  drain_later()
+  data_dir <- tempfile()
+  dir.create(data_dir)
+  on.exit(unlink(data_dir, recursive = TRUE))
+
+  server <- amsync_server(data_dir = data_dir)
+  server$start()
+  on.exit(server$close(), add = TRUE)
+
+  doc_id <- seed_text_doc(server, "unchanged")
+  client <- amsync_client(server$url, doc_id)
+  on.exit(client$close(), add = TRUE)
+
+  # The editor was closed without saving.
+  local_mocked_bindings(edit_in_shiny = mock_editor_returns(NULL))
+
+  expect_message(
+    res <- amsync_edit(client, at = "text"),
+    "Edit cancelled."
   )
   expect_identical(res, client)
   expect_equal(
@@ -128,7 +157,7 @@ test_that("amsync_edit preserves the original trailing-newline state", {
   client <- amsync_client(server$url, doc_id)
   on.exit(client$close(), add = TRUE)
 
-  local_mocked_bindings(launch_editor = mock_editor_writes("line one\nline two\n"))
+  local_mocked_bindings(edit_in_shiny = mock_editor_returns("line one\nline two\n"))
   amsync_edit(client, at = "text")
 
   expect_equal(
@@ -169,61 +198,19 @@ test_that("amsync_edit validates its client argument", {
   expect_error(amsync_edit(fake), "not active")
 })
 
-test_that("resolve_editor follows the documented precedence", {
-  old_opt <- options(editor = NULL)
-  old_visual <- Sys.getenv("VISUAL", unset = NA)
-  old_editor <- Sys.getenv("EDITOR", unset = NA)
-  on.exit({
-    options(old_opt)
-    if (is.na(old_visual)) Sys.unsetenv("VISUAL") else Sys.setenv(VISUAL = old_visual)
-    if (is.na(old_editor)) Sys.unsetenv("EDITOR") else Sys.setenv(EDITOR = old_editor)
-  })
+test_that("ext_to_language maps extensions to editor languages", {
+  # Leading dot optional, case-insensitive.
+  expect_equal(ext_to_language(".R"), "r")
+  expect_equal(ext_to_language("py"), "python")
+  expect_equal(ext_to_language(".qmd"), "markdown")
+  expect_equal(ext_to_language(".Rmd"), "markdown")
+  expect_equal(ext_to_language("YAML"), "yaml")
+  expect_equal(ext_to_language(".cpp"), "cpp")
 
-  Sys.setenv(VISUAL = "visual-ed", EDITOR = "editor-ed")
-  options(editor = "option-ed")
-
-  # explicit arg wins over everything
-  expect_equal(resolve_editor("arg-ed"), "arg-ed")
-  # getOption("editor") wins over env vars
-  expect_equal(resolve_editor(NULL), "option-ed")
-
-  # without the option, $VISUAL beats $EDITOR
-  options(editor = NULL)
-  expect_equal(resolve_editor(NULL), "visual-ed")
-
-  # without $VISUAL, falls back to $EDITOR
-  Sys.unsetenv("VISUAL")
-  expect_equal(resolve_editor(NULL), "editor-ed")
-})
-
-test_that("resolve_editor skips a non-string getOption('editor')", {
-  old_opt <- options(editor = utils::file.edit)
-  old_visual <- Sys.getenv("VISUAL", unset = NA)
-  old_editor <- Sys.getenv("EDITOR", unset = NA)
-  on.exit({
-    options(old_opt)
-    if (is.na(old_visual)) Sys.unsetenv("VISUAL") else Sys.setenv(VISUAL = old_visual)
-    if (is.na(old_editor)) Sys.unsetenv("EDITOR") else Sys.setenv(EDITOR = old_editor)
-  })
-
-  # A closure editor (as RStudio sets) must be skipped, not coerced.
-  Sys.unsetenv("VISUAL")
-  Sys.setenv(EDITOR = "editor-ed")
-  expect_silent(ed <- resolve_editor(NULL))
-  expect_equal(ed, "editor-ed")
-})
-
-test_that("launch_editor surfaces a non-zero editor exit status", {
-  skip_on_os("windows")
-  tmp <- tempfile()
-  file.create(tmp)
-  on.exit(unlink(tmp))
-
-  # `false` exits 1 without touching the file.
-  expect_error(
-    launch_editor(tmp, editor = "false"),
-    "exited with status"
-  )
+  # Missing / empty / unknown all fall back to plain.
+  expect_equal(ext_to_language(NULL), "plain")
+  expect_equal(ext_to_language(""), "plain")
+  expect_equal(ext_to_language(".unknown"), "plain")
 })
 
 test_that("match_trailing_newline mirrors the base string", {

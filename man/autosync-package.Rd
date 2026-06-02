@@ -33,7 +33,7 @@ clients in collaborative applications.
 
 \describe{
 \item{\code{\link[=amsync_project]{amsync_project()}}}{Browse and edit the files in a project document}
-\item{\code{\link[=amsync_edit]{amsync_edit()}}}{Edit a synced text object in your editor}
+\item{\code{\link[=amsync_edit]{amsync_edit()}}}{Edit a synced text object in a Shiny code editor}
 }
 }
 

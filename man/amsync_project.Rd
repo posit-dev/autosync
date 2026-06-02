@@ -43,9 +43,9 @@ with the following fields and methods:
 document (the caller owns it and must \verb{$close()} it).}
 \item{\code{edit(path = NULL)}}{Open the file's client, run \code{\link[=amsync_edit]{amsync_edit()}}
 with the extension inferred from the path, then close the client. If
-\code{path} is \code{NULL} and interactive, shows the picker first.}
-\item{\code{browse()}}{Interactive loop: print the tree, pick a file, edit
-it, repeat.}
+\code{path} is \code{NULL} and interactive, shows a Shiny file picker first.}
+\item{\code{browse()}}{Interactive loop: pick a file from a Shiny file
+picker, edit it, then return to the picker; repeat until \strong{Done}.}
 \item{\code{refresh()}}{Re-fetch the project document to pick up added or
 removed files.}
 }

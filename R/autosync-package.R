@@ -22,7 +22,7 @@
 #' @section Browsing and Editing:
 #' \describe{
 #'   \item{[amsync_project()]}{Browse and edit the files in a project document}
-#'   \item{[amsync_edit()]}{Edit a synced text object in your editor}
+#'   \item{[amsync_edit()]}{Edit a synced text object in a Shiny code editor}
 #' }
 #'
 #' @section Protocol:
