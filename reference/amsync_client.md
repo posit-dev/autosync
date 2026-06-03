@@ -1,22 +1,19 @@
-# Create a persistent sync client
+# Open a persistent sync connection
 
 Connects to an automerge-repo sync server and maintains a persistent
-WebSocket connection for continuous document synchronization. Unlike
+WebSocket connection. The connection performs the protocol handshake but
+holds no documents on its own; open one or more live documents over it
+with the `$open_doc()` method. Each document stays synced — receiving
+real-time updates from other peers and flushing local changes — for as
+long as the connection is open. Unlike
 [`amsync_fetch()`](http://shikokuchuo.net/autosync/reference/amsync_fetch.md),
-which performs a one-off retrieval, this client stays connected and
-receives real-time updates from other peers.
+which performs a one-off retrieval over a throwaway connection, several
+documents can share a single connection here.
 
 ## Usage
 
 ``` r
-amsync_client(
-  url,
-  doc_id,
-  timeout = 5000L,
-  tls = NULL,
-  token = NULL,
-  interval = 1000L
-)
+amsync_client(url, timeout = 5000L, tls = NULL, token = NULL, interval = 1000L)
 ```
 
 ## Arguments
@@ -25,10 +22,6 @@ amsync_client(
 
   WebSocket URL of the sync server (e.g., "ws://localhost:3030/" or
   "wss://sync.automerge.org/"). Note: trailing slash may be required.
-
-- doc_id:
-
-  Document ID (base58check encoded string)
 
 - timeout:
 
@@ -50,13 +43,31 @@ amsync_client(
   Interval in milliseconds for pushing local changes to the server.
   Default 1000. Uses
   [`later::later()`](https://later.r-lib.org/reference/later.html) to
-  periodically check for and send local changes. This is a cheap no-op
-  when there are no changes.
+  periodically check for and send local changes for every open document.
+  This is a cheap no-op when there are no changes.
 
 ## Value
 
 An environment of class `"amsync_client"` with reference semantics,
-containing:
+representing the connection:
+
+- `open_doc(doc_id, timeout)`:
+
+  Open a live document over this connection and return an `amsync_doc`
+  handle for it (see below). Repeated calls for the same `doc_id` reuse
+  the document already open on the connection rather than requesting it
+  again.
+
+- [`close()`](https://rdrr.io/r/base/connections.html):
+
+  Disconnect and stop syncing all open documents.
+
+- `active`:
+
+  Logical, whether the connection is active.
+
+An `amsync_doc` handle returned by `$open_doc()` is itself an
+environment with:
 
 - `doc`:
 
@@ -64,27 +75,30 @@ containing:
 
 - `push()`:
 
-  Push local changes to the server immediately.
+  Push this document's local changes to the server immediately.
 
 - [`close()`](https://rdrr.io/r/base/connections.html):
 
-  Disconnect and stop syncing.
+  Stop syncing this one document (detach it from the connection); the
+  connection and its other documents are unaffected.
 
 - `active`:
 
-  Logical, whether the connection is active.
+  Logical, whether the document is still open on an active connection.
 
 ## Details
 
-The client performs a synchronous handshake and initial sync before
-returning, so `$doc` has meaningful content immediately. After that,
-incoming changes are received asynchronously via a self-chaining promise
-loop, and local changes are flushed periodically via a
+Opening the connection performs a synchronous handshake before
+returning. `$open_doc()` then performs a synchronous initial sync, so
+the returned handle's `$doc` has meaningful content immediately. After
+that, incoming changes are received asynchronously via a self-chaining
+promise loop, and local changes are flushed periodically via a
 [`later::later()`](https://later.r-lib.org/reference/later.html) timer.
 
-`$close()` does not flush pending local changes. Call `$push()` first if
-you have unsynced edits — otherwise any changes made since the last
-`sync`-interval tick may be lost.
+Neither [`close()`](https://rdrr.io/r/base/connections.html) flushes
+pending local changes. Call `$push()` first if you have unsynced edits —
+otherwise any changes made since the last `sync`-interval tick may be
+lost.
 
 ## Examples
 
@@ -94,15 +108,19 @@ server <- amsync_server()
 server$start()
 doc_id <- create_document(server)
 
-client <- amsync_client(server$url, doc_id)
-automerge::am_keys(client$doc)
+conn <- amsync_client(server$url)
+doc <- conn$open_doc(doc_id)
+automerge::am_keys(doc$doc)
 
 # Make local changes and push
-automerge::am_put(client$doc, automerge::AM_ROOT, "key", "value")
-client$push()
+automerge::am_put(doc$doc, automerge::AM_ROOT, "key", "value")
+doc$push()
 
-# Disconnect
-client$close()
+# Open another document over the same connection
+other <- conn$open_doc(create_document(server))
+
+# Disconnect (closes every document on the connection)
+conn$close()
 server$close()
 }
 ```

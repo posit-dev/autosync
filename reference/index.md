@@ -3,9 +3,13 @@
 ## All functions
 
 - [`amsync_client()`](http://shikokuchuo.net/autosync/reference/amsync_client.md)
-  : Create a persistent sync client
+  : Open a persistent sync connection
+- [`amsync_edit()`](http://shikokuchuo.net/autosync/reference/amsync_edit.md)
+  : Edit a synced text object in a live Shiny editor
 - [`amsync_fetch()`](http://shikokuchuo.net/autosync/reference/amsync_fetch.md)
   : Fetch a document from a sync server
+- [`amsync_project()`](http://shikokuchuo.net/autosync/reference/amsync_project.md)
+  : Browse and edit files in a project document
 - [`amsync_server()`](http://shikokuchuo.net/autosync/reference/amsync_server.md)
   : Create an Automerge sync server
 - [`amsync_token()`](http://shikokuchuo.net/autosync/reference/amsync_token.md)

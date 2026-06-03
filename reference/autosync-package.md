@@ -29,6 +29,16 @@ Automerge clients in collaborative applications.
 
   Generate a new document ID
 
+## Browsing and Editing
+
+- [`amsync_project()`](http://shikokuchuo.net/autosync/reference/amsync_project.md):
+
+  Browse and edit the files in a project document
+
+- [`amsync_edit()`](http://shikokuchuo.net/autosync/reference/amsync_edit.md):
+
+  Edit a synced text object in a Shiny code editor
+
 ## Protocol
 
 The server implements the automerge-repo sync protocol over WebSockets.
