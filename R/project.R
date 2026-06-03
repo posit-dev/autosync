@@ -201,7 +201,8 @@ file_ext_dot <- function(path) {
 #' Spins up a single-purpose Shiny app presenting the project's file paths as a
 #' radio-button list, with **Edit** and **Done** buttons. Blocks until the app
 #' exits, returning the selected path on **Edit** or `NULL` if the user chose
-#' **Done** or closed the window.
+#' **Done** or closed the window. Choosing **Done** first replaces the picker
+#' with a brief closing message so it is clear the session has ended.
 #'
 #' @param paths Character vector of paths.
 #'
@@ -228,6 +229,7 @@ pick_path_shiny <- function(paths) {
     padding = 0,
     bslib::card(
       bslib::card_header(
+        id = "picker-header",
         class = "d-flex justify-content-between align-items-center",
         shiny::span("Select a file to edit"),
         shiny::div(
@@ -241,25 +243,55 @@ pick_path_shiny <- function(paths) {
         )
       ),
       bslib::card_body(
+        id = "picker-body",
         shiny::radioButtons("path", label = NULL, choices = paths)
       )
     )
   )
 
   server <- function(input, output, session) {
-    # Stop exactly once; whichever of Edit / Done / window-close happens first
-    # decides the return value.
-    done <- FALSE
-    finish <- function(value) {
-      if (done) {
+    # Stop exactly once, returning the selected path (Edit) or NULL (Done /
+    # window-close).
+    stopped <- FALSE
+    stop_with <- function(value) {
+      if (stopped) {
         return()
       }
-      done <<- TRUE
+      stopped <<- TRUE
       shiny::stopApp(returnValue = value)
     }
-    shiny::observeEvent(input$edit, finish(input$path))
-    shiny::observeEvent(input$done, finish(NULL))
-    session$onSessionEnded(function() finish(NULL))
+
+    # Edit hands the selection straight to the editor, so close immediately.
+    shiny::observeEvent(input$edit, stop_with(input$path))
+
+    # Done ends the session with nothing else to show, so replace the picker
+    # with a clear message before stopping -- once it has had time to render,
+    # which also unblocks the calling R session.
+    closing <- FALSE
+    shiny::observeEvent(input$done, {
+      if (closing) {
+        return()
+      }
+      closing <<- TRUE
+      shiny::insertUI(
+        "#picker-body",
+        where = "beforeEnd",
+        ui = shiny::div(
+          class = paste(
+            "html-fill-item d-flex flex-column",
+            "justify-content-center align-items-center text-muted p-4"
+          ),
+          shiny::tags$h5(class = "mb-1", "Finished"),
+          shiny::tags$p(class = "mb-0", "You can close this window.")
+        ),
+        immediate = TRUE
+      )
+      shiny::removeUI("#picker-header", immediate = TRUE)
+      shiny::removeUI("#path", immediate = TRUE)
+      later(function() stop_with(NULL), delay = 0.75)
+    })
+
+    session$onSessionEnded(function() stop_with(NULL))
   }
 
   shiny::runGadget(shiny::shinyApp(ui, server), stopOnCancel = FALSE)

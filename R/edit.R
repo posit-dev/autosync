@@ -256,6 +256,8 @@ edit_in_shiny <- function(doc, at, push, ext = NULL, debounce = 300L) {
     })
 
     # Stop exactly once; the Close button or window-close ends the session.
+    # Closing the editor returns to the file picker (in a browse loop), so it
+    # is already obvious the editor has ended -- no closing message needed here.
     done <- FALSE
     finish <- function() {
       if (done) {
