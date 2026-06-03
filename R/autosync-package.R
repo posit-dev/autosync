@@ -19,6 +19,12 @@
 #'   \item{[generate_document_id()]}{Generate a new document ID}
 #' }
 #'
+#' @section Browsing and Editing:
+#' \describe{
+#'   \item{[amsync_project()]}{Browse and edit the files in a project document}
+#'   \item{[amsync_edit()]}{Edit a synced text object in a Shiny code editor}
+#' }
+#'
 #' @section Protocol:
 #' The server implements the automerge-repo sync protocol over WebSockets.
 #' Messages are CBOR-encoded and include:
@@ -46,7 +52,7 @@
 #'
 #' @importFrom automerge am_create am_get am_keys am_length am_load am_save am_sync_decode am_sync_encode am_sync_state am_sync_state_decode am_sync_state_encode AM_ROOT
 #' @importFrom later later run_now
-#' @importFrom nanonext http_server random recv recv_aio send stream tls_config unresolved write_cert
+#' @importFrom nanonext http_server random recv recv_aio send stop_aio stream tls_config unresolved write_cert
 #' @importFrom secretbase base64enc base64dec base58enc base58dec cborenc cbordec jsondec jsonenc sha256
 #' @importFrom utils str
 "_PACKAGE"
