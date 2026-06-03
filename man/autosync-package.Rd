@@ -32,6 +32,8 @@ clients in collaborative applications.
 \section{Browsing and Editing}{
 
 \describe{
+\item{\code{\link[=amsync_app]{amsync_app()}}}{Launch a single-window Shiny app to connect to a
+project, browse its file tree, and edit files in a live code editor}
 \item{\code{\link[=amsync_project]{amsync_project()}}}{Browse and edit the files in a project document}
 \item{\code{\link[=amsync_edit]{amsync_edit()}}}{Edit a synced text object in a Shiny code editor}
 }
