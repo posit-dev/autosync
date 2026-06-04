@@ -213,19 +213,14 @@ build_amsync_app <- function(
         }
       }
 
-      proj <- tryCatch(
-        amsync_project(
-          url_in,
-          proj_in,
-          token = st$token,
-          tls = tls,
-          timeout = timeout,
-          files_key = files_key
-        ),
-        error = function(e) {
-          notify(session, "error", paste("Connection failed:", conditionMessage(e)))
-          NULL
-        }
+      proj <- connect_with_retry(
+        session,
+        url_in,
+        proj_in,
+        st$token,
+        tls,
+        timeout,
+        files_key
       )
       if (is.null(proj)) {
         return()
@@ -334,6 +329,79 @@ amsync_react_dep <- function() {
     css_file = "amsync.css",
     name = "autosync"
   )
+}
+
+#' Connect to a project, retrying transient failures
+#'
+#' The first dial to a sync server (often right after signing in) can fail
+#' transiently with a protocol/permission hiccup. Retry up to `retries` times,
+#' one second apart, before giving up. Returns the connected `amsync_project`, or
+#' `NULL` after notifying the final error.
+#'
+#' @param session The Shiny session (for retry/failure notifications).
+#' @param url,proj_id,token,tls,timeout,files_key Passed to [amsync_project()].
+#' @param retries Number of extra attempts after the first. Default 5.
+#'
+#' @return An `amsync_project`, or `NULL` on persistent failure.
+#'
+#' @noRd
+connect_with_retry <- function(
+  session,
+  url,
+  proj_id,
+  token,
+  tls,
+  timeout,
+  files_key,
+  retries = 5L
+) {
+  last_err <- NULL
+  attempts <- retries + 1L
+  for (attempt in seq_len(attempts)) {
+    proj <- tryCatch(
+      amsync_project(
+        url,
+        proj_id,
+        token = token,
+        tls = tls,
+        timeout = timeout,
+        files_key = files_key
+      ),
+      error = function(e) {
+        last_err <<- e
+        NULL
+      }
+    )
+    if (!is.null(proj)) {
+      return(proj)
+    }
+    if (attempt < attempts) {
+      notify(
+        session,
+        "warning",
+        sprintf("Connection failed, retrying (%d/%d)…", attempt, retries)
+      )
+      retry_pause()
+    }
+  }
+  notify(session, "error", paste("Connection failed:", conditionMessage(last_err)))
+  NULL
+}
+
+#' Pause ~1 second between connection retries, driving the event loop
+#'
+#' Pumps the shared `later`/nanonext loop so the wait stays responsive (and so
+#' tests can stub it to a no-op).
+#'
+#' @return Invisibly `NULL`.
+#'
+#' @noRd
+retry_pause <- function() {
+  deadline <- Sys.time() + 1
+  while (Sys.time() < deadline) {
+    run_now(0.1)
+  }
+  invisible()
 }
 
 #' Send a transient notification to the React client
