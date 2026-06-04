@@ -286,9 +286,22 @@ body {
   border-bottom: 1px solid var(--amsync-border);
   background: var(--amsync-bg-subtle);
 }
+.amsync-editor-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+.amsync-file-icon {
+  flex: 0 0 auto;
+  color: var(--amsync-muted);
+}
 .amsync-editor-path {
   font-family: var(--amsync-mono);
   font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .amsync-editor-live {
   font-size: 12px;
