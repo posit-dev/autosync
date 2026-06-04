@@ -379,7 +379,7 @@ connect_with_retry <- function(
       notify(
         session,
         "warning",
-        sprintf("Connection failed, retrying (%d/%d)…", attempt, retries)
+        sprintf("Connection failed, retrying (%d/%d)\u2026", attempt, retries)
       )
       retry_pause()
     }
