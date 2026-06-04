@@ -139,16 +139,6 @@ test_that("the editor and document converge without echoing", {
   expect_equal(automerge::am_text_content(doc[["text"]]), ">> hello there world")
 })
 
-test_that("editor_stream_js embeds the debounce and streams via the binding", {
-  js <- editor_stream_js(450)
-  expect_match(js, "var DEBOUNCE = 450;", fixed = TRUE)
-  expect_match(js, "el.prismEditor.on('update'", fixed = TRUE)
-  expect_match(js, "el.onChangeCallback(false)", fixed = TRUE)
-
-  # Coerced to an integer literal (no decimals leak into the JS).
-  expect_match(editor_stream_js(300L), "var DEBOUNCE = 300;", fixed = TRUE)
-})
-
 test_that("doc$edit errors when the target is not a text object", {
   skip_on_cran()
   drain_later()
@@ -190,21 +180,6 @@ test_that("edit_doc validates its arguments", {
   expect_error(edit_doc(fake, debounce = c(1, 2)), "single non-negative")
 })
 
-test_that("ext_to_language maps extensions to editor languages", {
-  # Leading dot optional, case-insensitive.
-  expect_equal(ext_to_language(".R"), "r")
-  expect_equal(ext_to_language("py"), "python")
-  expect_equal(ext_to_language(".qmd"), "markdown")
-  expect_equal(ext_to_language(".Rmd"), "markdown")
-  expect_equal(ext_to_language("YAML"), "yaml")
-  expect_equal(ext_to_language(".cpp"), "cpp")
-
-  # Missing / empty / unknown all fall back to plain.
-  expect_equal(ext_to_language(NULL), "plain")
-  expect_equal(ext_to_language(""), "plain")
-  expect_equal(ext_to_language(".unknown"), "plain")
-})
-
 test_that("match_trailing_newline mirrors the base string", {
   expect_equal(match_trailing_newline("a\n", "no-nl"), "a")
   expect_equal(match_trailing_newline("a\n\n", "no-nl"), "a")
@@ -226,31 +201,10 @@ test_that("navigate_to_text errors when the path has no object", {
   )
 })
 
-test_that("ext_to_language covers every mapped language group", {
-  # One representative extension per distinct language mapping.
-  expect_equal(ext_to_language("jl"), "julia")
-  expect_equal(ext_to_language("sql"), "sql")
-  expect_equal(ext_to_language("js"), "javascript")
-  expect_equal(ext_to_language("ts"), "typescript")
-  expect_equal(ext_to_language("html"), "html")
-  expect_equal(ext_to_language("css"), "css")
-  expect_equal(ext_to_language("scss"), "scss")
-  expect_equal(ext_to_language("sass"), "sass")
-  expect_equal(ext_to_language("json"), "json")
-  expect_equal(ext_to_language("xml"), "xml")
-  expect_equal(ext_to_language("toml"), "toml")
-  expect_equal(ext_to_language("ini"), "ini")
-  expect_equal(ext_to_language("sh"), "bash")
-  expect_equal(ext_to_language("dockerfile"), "docker")
-  expect_equal(ext_to_language("tex"), "latex")
-  expect_equal(ext_to_language("rs"), "rust")
-  expect_equal(ext_to_language("diff"), "diff")
-})
-
 test_that("install_editor_sync is a no-op while no document is open", {
   skip_if_not_installed("shiny")
-  skip_if_not_installed("bslib")
 
+  pushed <- NULL
   st <- new.env(parent = emptyenv())
   st$doc <- NULL
   st$at <- "text"
@@ -260,21 +214,24 @@ test_that("install_editor_sync is a no-op while no document is open", {
   # so a single flushReact() runs the incoming observer exactly once.
   app <- shiny::shinyApp(
     shiny::fluidPage(),
-    function(input, output, session) install_editor_sync(input, st, poll_ms = 1e9)
+    function(input, output, session) {
+      install_editor_sync(input, st, function(v) pushed <<- v, poll_ms = 1e9)
+    }
   )
 
   shiny::testServer(app, {
     session$flushReact() # incoming poll: no document -> early return
     session$setInputs(content = "typed") # outgoing edit: no document -> early return
     expect_equal(st$shown, "") # nothing written
+    expect_null(pushed) # nothing pushed to the editor
   })
 })
 
 test_that("install_editor_sync reflects a remote change back into the editor", {
   skip_if_not_installed("shiny")
-  skip_if_not_installed("bslib")
 
   handle <- fake_doc_handle("hello world")
+  pushed <- NULL
   st <- new.env(parent = emptyenv())
   st$doc <- handle
   st$at <- "text"
@@ -285,28 +242,31 @@ test_that("install_editor_sync reflects a remote change back into the editor", {
 
   app <- shiny::shinyApp(
     shiny::fluidPage(),
-    function(input, output, session) install_editor_sync(input, st, poll_ms = 1e9)
+    function(input, output, session) {
+      install_editor_sync(input, st, function(v) pushed <<- v, poll_ms = 1e9)
+    }
   )
 
   shiny::testServer(app, {
     session$flushReact() # incoming poll: current differs from shown -> adopt it
     expect_equal(st$shown, ">> hello world")
+    expect_equal(pushed, ">> hello world") # pushed to the client editor
   })
 })
 
-test_that("the editor errors when shiny or bslib is missing", {
+test_that("the editor errors when shiny or shinyreact is missing", {
   handle <- fake_doc_handle("hello world")
   # The target validates first, then the editor checks for its UI dependencies.
   local_mocked_bindings(requireNamespace = function(...) FALSE, .package = "base")
   expect_error(
     edit_doc(handle, at = "text"),
-    "requires the 'shiny' and 'bslib' packages"
+    "requires the 'shiny' and 'shinyreact' packages"
   )
 })
 
 test_that("edit_doc launches the live editor and reports the final content", {
   skip_if_not_installed("shiny")
-  skip_if_not_installed("bslib")
+  skip_if_not_installed("shinyreact")
 
   handle <- fake_doc_handle("hello world")
 

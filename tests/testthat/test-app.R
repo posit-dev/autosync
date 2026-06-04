@@ -3,15 +3,15 @@ test_that("amsync_app errors in a non-interactive session", {
   expect_error(amsync_app(), "requires an interactive session")
 })
 
-test_that("amsync_app errors when shiny or bslib is missing", {
+test_that("amsync_app errors when shiny or shinyreact is missing", {
   local_mocked_bindings(is_interactive = function() TRUE)
   local_mocked_bindings(requireNamespace = function(...) FALSE, .package = "base")
-  expect_error(amsync_app(), "requires the 'shiny' and 'bslib' packages")
+  expect_error(amsync_app(), "requires the 'shiny' and 'shinyreact' packages")
 })
 
 test_that("amsync_app builds the app and launches it as a gadget", {
   skip_if_not_installed("shiny")
-  skip_if_not_installed("bslib")
+  skip_if_not_installed("shinyreact")
 
   # Mock the interactive check and the gadget launcher so the happy path runs
   # without opening a window; capture the built app instead.
@@ -29,38 +29,9 @@ test_that("amsync_app builds the app and launches it as a gadget", {
   expect_s3_class(launched, "shiny.appobj")
 })
 
-test_that("connect_screen_ui exposes the URL, project, auth, and connect inputs", {
+test_that("Exit switches to the closed screen and schedules the app to stop", {
   skip_if_not_installed("shiny")
-  skip_if_not_installed("bslib")
-
-  html <- as.character(connect_screen_ui("wss://x/ws", "DOC123"))
-
-  # The two prefillable fields carry the supplied values.
-  expect_match(html, 'id="url"', fixed = TRUE)
-  expect_match(html, 'value="wss://x/ws"', fixed = TRUE)
-  expect_match(html, 'id="proj_id"', fixed = TRUE)
-  expect_match(html, 'value="DOC123"', fixed = TRUE)
-
-  # Auth, advanced fields, and the connect action are all present.
-  expect_match(html, 'id="authenticate"', fixed = TRUE)
-  expect_match(html, 'id="auth_status"', fixed = TRUE)
-  expect_match(html, 'id="client_id"', fixed = TRUE)
-  expect_match(html, 'id="client_secret"', fixed = TRUE)
-  expect_match(html, 'id="issuer"', fixed = TRUE)
-  expect_match(html, 'id="connect"', fixed = TRUE)
-  expect_match(html, 'id="exit"', fixed = TRUE)
-})
-
-test_that("closed_screen_ui shows a message to close the window", {
-  skip_if_not_installed("shiny")
-  html <- as.character(closed_screen_ui())
-  expect_match(html, "Session ended", fixed = TRUE)
-  expect_match(html, "close this window", fixed = TRUE)
-})
-
-test_that("Exit shows the closing screen and schedules the app to stop", {
-  skip_if_not_installed("shiny")
-  skip_if_not_installed("bslib")
+  skip_if_not_installed("shinyreact")
 
   # Stub the delayed stop so the scheduled stopApp() doesn't leak into the
   # shared event loop and disturb other tests; just record that it was queued.
@@ -83,7 +54,7 @@ test_that("Exit shows the closing screen and schedules the app to stop", {
 
 test_that("a token passed to the app starts it signed in", {
   skip_if_not_installed("shiny")
-  skip_if_not_installed("bslib")
+  skip_if_not_installed("shinyreact")
 
   app <- build_amsync_app("", "", "jwt.tok.en", NULL, 5000L, "files", 300L)
   shiny::testServer(app, {
@@ -92,25 +63,24 @@ test_that("a token passed to the app starts it signed in", {
   })
 })
 
-test_that("the connect screen renders with the prefilled server URL", {
+test_that("the app exposes the prefilled server URL and project to the client", {
   skip_if_not_installed("shiny")
-  skip_if_not_installed("bslib")
+  skip_if_not_installed("shinyreact")
 
   # Regression: the `server` argument must not be shadowed by the app's server
-  # function. Rendering output$screen on the connect view runs
-  # connect_screen_ui(server, ...) and would error ("cannot coerce type
-  # 'closure'") if `server` resolved to the server function instead of the URL.
+  # function. output$init reads `server`/`proj_id` and would error ("cannot
+  # coerce type 'closure'") if `server` resolved to the server function.
   app <- build_amsync_app("wss://x/ws", "DOC123", NULL, NULL, 5000L, "files", 300L)
   shiny::testServer(app, {
-    html <- paste(unlist(output$screen), collapse = " ")
-    expect_match(html, "Connect to a project", fixed = TRUE)
-    expect_match(html, "wss://x/ws", fixed = TRUE)
+    init <- output$init
+    expect_equal(init$server, "wss://x/ws")
+    expect_equal(init$proj_id, "DOC123")
   })
 })
 
 test_that("amsync_app rejects a malformed token", {
   skip_if_not_installed("shiny")
-  skip_if_not_installed("bslib")
+  skip_if_not_installed("shinyreact")
   # Token validation runs after the interactive + package checks, so mock the
   # session as interactive to reach it.
   local_mocked_bindings(is_interactive = function() TRUE)
@@ -119,74 +89,10 @@ test_that("amsync_app rejects a malformed token", {
   expect_error(amsync_app(token = ""), "single non-empty string")
 })
 
-test_that("browse_screen_ui lays out the tree container, actions, and editor", {
-  skip_if_not_installed("shiny")
-  skip_if_not_installed("bslib")
-
-  html <- as.character(browse_screen_ui())
-
-  expect_match(html, 'id="amsync-filetree"', fixed = TRUE)
-  expect_match(html, 'id="filetree"', fixed = TRUE)
-  expect_match(html, 'id="refresh"', fixed = TRUE)
-  expect_match(html, 'id="disconnect"', fixed = TRUE)
-  expect_match(html, 'id="editor"', fixed = TRUE)
-  # File-row clicks are wired to input$file via the delegated handler.
-  expect_match(html, "Shiny.setInputValue('file'", fixed = TRUE)
-})
-
-test_that("build_file_tree_ui renders a collapsible tree with original paths", {
-  skip_if_not_installed("shiny")
-
-  html <- as.character(build_file_tree_ui(
-    c("/charlie/index.qmd", "/charlie/about.qmd", "/notes/todo.md"),
-    selected = "/notes/todo.md"
-  ))
-
-  # Folders become <details>/<summary>; nested files keep their ORIGINAL path.
-  expect_match(html, "<details", fixed = TRUE)
-  expect_match(html, "<summary>charlie</summary>", fixed = TRUE)
-  expect_match(html, 'data-path="/charlie/index.qmd"', fixed = TRUE)
-  expect_match(html, 'data-path="/notes/todo.md"', fixed = TRUE)
-  # Leaf labels are the file name, not the full path.
-  expect_match(html, ">index.qmd<", fixed = TRUE)
-  # The open file is marked active.
-  expect_match(html, 'class="amsync-file active"', fixed = TRUE)
-})
-
-test_that("build_file_tree_ui shows a placeholder when there are no files", {
-  skip_if_not_installed("shiny")
-  expect_match(as.character(build_file_tree_ui(character(0))), "No files")
-})
-
-test_that("editor_card_ui shows the path and embeds the streaming shim", {
-  skip_if_not_installed("shiny")
-  skip_if_not_installed("bslib")
-
-  html <- as.character(editor_card_ui("/notes.md", "hello", ".md", 450L))
-
-  expect_match(html, 'id="content"', fixed = TRUE)
-  expect_match(html, "/notes.md", fixed = TRUE)
-  # The debounce flows through to the editor-streaming JavaScript.
-  expect_match(html, "var DEBOUNCE = 450;", fixed = TRUE)
-})
-
-test_that("editor_placeholder_ui prompts the user to pick a file", {
-  skip_if_not_installed("shiny")
-  expect_match(as.character(editor_placeholder_ui()), "Select a file")
-})
-
-test_that("auth_status_ui reflects the sign-in state", {
-  skip_if_not_installed("shiny")
-  expect_match(as.character(auth_status_ui(TRUE)), "signed in")
-  expect_match(as.character(auth_status_ui(TRUE)), "text-success", fixed = TRUE)
-  expect_match(as.character(auth_status_ui(FALSE)), "not signed in")
-  expect_match(as.character(auth_status_ui(FALSE)), "text-muted", fixed = TRUE)
-})
-
 test_that("the app connects, browses, and edits over a live server", {
   skip_on_cran()
   skip_if_not_installed("shiny")
-  skip_if_not_installed("bslib")
+  skip_if_not_installed("shinyreact")
   drain_later()
 
   data_dir <- tempfile()
@@ -232,11 +138,14 @@ test_that("the app connects, browses, and edits over a live server", {
     expect_equal(rv$paths, "/notes.md")
     expect_s3_class(st$proj, "amsync_project")
 
-    # Opening the file loads its document and content into the editor.
+    # Opening the file loads its document and pushes its content to the editor.
     session$setInputs(file = "/notes.md")
     expect_equal(rv$selected, "/notes.md")
     expect_equal(st$base, "hello world")
     expect_s3_class(st$doc, "amsync_doc")
+    expect_equal(rv$editor$value, "hello world")
+    expect_equal(rv$editor$ext, ".md")
+    expect_gt(rv$editor$rev, 0L)
 
     # Typing in the editor writes the minimal diff into the live document.
     session$setInputs(content = "hello brave world")
@@ -254,7 +163,7 @@ test_that("the app connects, browses, and edits over a live server", {
 
 test_that("the Authenticate button signs in via amsync_token()", {
   skip_if_not_installed("shiny")
-  skip_if_not_installed("bslib")
+  skip_if_not_installed("shinyreact")
 
   local_mocked_bindings(amsync_token = function(...) "fresh.jwt")
   app <- build_amsync_app("", "", NULL, NULL, 5000L, "files", 300L)
@@ -270,7 +179,7 @@ test_that("the Authenticate button signs in via amsync_token()", {
 
 test_that("a failed Authenticate leaves the session signed out", {
   skip_if_not_installed("shiny")
-  skip_if_not_installed("bslib")
+  skip_if_not_installed("shinyreact")
 
   local_mocked_bindings(amsync_token = function(...) stop("denied"))
   app <- build_amsync_app("", "", NULL, NULL, 5000L, "files", 300L)
@@ -285,7 +194,7 @@ test_that("a failed Authenticate leaves the session signed out", {
 
 test_that("Connect warns and stays put when the URL or project ID is blank", {
   skip_if_not_installed("shiny")
-  skip_if_not_installed("bslib")
+  skip_if_not_installed("shinyreact")
 
   app <- build_amsync_app("", "", NULL, NULL, 5000L, "files", 300L)
   shiny::testServer(app, {
@@ -298,7 +207,7 @@ test_that("Connect warns and stays put when the URL or project ID is blank", {
 
 test_that("a failed Connect stays on the connect screen", {
   skip_if_not_installed("shiny")
-  skip_if_not_installed("bslib")
+  skip_if_not_installed("shinyreact")
 
   local_mocked_bindings(amsync_project = function(...) stop("cannot connect"))
   app <- build_amsync_app("", "", NULL, NULL, 5000L, "files", 300L)
@@ -312,7 +221,7 @@ test_that("a failed Connect stays on the connect screen", {
 
 test_that("opening a file ignores a blank path and reports open errors", {
   skip_if_not_installed("shiny")
-  skip_if_not_installed("bslib")
+  skip_if_not_installed("shinyreact")
 
   app <- build_amsync_app("", "", NULL, NULL, 5000L, "files", 300L)
   shiny::testServer(app, {
@@ -334,7 +243,7 @@ test_that("opening a file ignores a blank path and reports open errors", {
 
 test_that("Refresh re-resolves the tree and drops a vanished selection", {
   skip_if_not_installed("shiny")
-  skip_if_not_installed("bslib")
+  skip_if_not_installed("shinyreact")
 
   app <- build_amsync_app("", "", NULL, NULL, 5000L, "files", 300L)
   shiny::testServer(app, {
@@ -354,14 +263,6 @@ test_that("Refresh re-resolves the tree and drops a vanished selection", {
     expect_equal(rv$paths, c("/a.md", "/b.md"))
     expect_null(rv$selected)
   })
-})
-
-test_that("build_file_tree_ui skips path entries with no real components", {
-  skip_if_not_installed("shiny")
-
-  # A path of only separators contributes no nodes (the skipped-entry branch).
-  html <- as.character(build_file_tree_ui("/"))
-  expect_false(grepl("data-path", html, fixed = TRUE))
 })
 
 test_that("cleanup_project closes the connection and clears state", {

@@ -16,3 +16,4 @@
 ^Meta$
 ^\.automerge$
 ^codecov\.yml$
+^srcjs$

@@ -29,12 +29,12 @@ Imports:
     tools,
     utils
 Suggests:
-    bslib (>= 0.10.0),
-    httpuv,
     openssl,
     shiny,
+    shinyreact,
     testthat (>= 3.0.0)
 Remotes:
+    posit-dev/shinyreact,
     r-lib/httr2
 Config/Needs/website: tidyverse/tidytemplate
 Config/roxygen2/markdown: TRUE

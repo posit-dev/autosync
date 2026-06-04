@@ -55,16 +55,20 @@ under \strong{Advanced} (prefilled from the \code{OIDC_CLIENT_ID},
 signed in, skipping that step. Leaving the sign-in untouched connects
 without a token, for open servers.
 \item \strong{Browse & edit} -- once connected, the project's file tree appears in a
-sidebar; selecting a file opens its document in a live
-\code{\link[bslib:input_code_editor]{bslib::input_code_editor()}} that stays in sync with the server in both
-directions, just like a document handle's \verb{$edit()} method. \strong{Disconnect}
-returns to the connect screen; closing the window ends the session.
+sidebar; selecting a file opens its document in a live CodeMirror editor
+that stays in sync with the server in both directions, just like a document
+handle's \verb{$edit()} method. \strong{Disconnect} returns to the connect screen;
+closing the window ends the session.
 }
 
 This is a front door to \code{\link[=amsync_project]{amsync_project()}}: it builds the same connection and
 reuses it for every file opened during the session.
 
-Requires the \pkg{shiny} and \pkg{bslib} packages and an interactive session.
+The interface is a React frontend rendered with the \pkg{shinyreact} package:
+the file tree uses the \pkg{@pierre/trees} component and the editor uses
+CodeMirror 6, while R keeps owning the live Automerge documents and all
+syncing. Requires the \pkg{shiny} and \pkg{shinyreact} packages and an
+interactive session.
 }
 \examples{
 \dontshow{if (interactive()) withAutoprint(\{ # examplesIf}

@@ -4,10 +4,10 @@
 #'
 #' Implements the `$edit()` method on the `amsync_doc` handle returned by
 #' [amsync_client()]'s `$open_doc()`: opens the document's text object at `at`
-#' in a Shiny [bslib::input_code_editor()] that stays in sync with the live
-#' document in both directions, blocks until the editor closes, then prints a
-#' one-line summary. The user-facing description and caveats live on
-#' [amsync_client()].
+#' in a live React CodeMirror editor (rendered with \pkg{shinyreact}) that stays
+#' in sync with the live document in both directions, blocks until the editor
+#' closes, then prints a one-line summary. The user-facing description and
+#' caveats live on [amsync_client()].
 #'
 #' @param doc An `amsync_doc` handle backed by an active connection.
 #' @param at Character path to the text object within the document. A single
@@ -125,17 +125,25 @@ poll_doc_to_editor <- function(target, shown) {
 #' each side ignore the echo of its own write: an outgoing edit sets it to what
 #' we wrote, and the poll skips while the document still matches it.
 #'
+#' The editor is the React CodeMirror component, reached over Shiny: the
+#' outgoing observer reads its value from `input$content`, and the incoming poll
+#' hands new content to `set_editor()`, which pushes it to the client (bumping
+#' the `editor_doc` revision the editor watches). Keeping the push pluggable
+#' lets the same sync drive the browse screen and the standalone `$edit()` view.
+#'
 #' @param input The Shiny session's `input`.
 #' @param st An environment exposing `$doc` (an `amsync_doc` handle or `NULL`
 #'   when nothing is open), `$at` (the text object's path), `$base` (the open
 #'   content, for trailing-newline state), and a mutable `$shown`.
+#' @param set_editor A function of one argument (the new content) that pushes it
+#'   into the client editor.
 #' @param poll_ms How often (ms) to poll the live document for remote changes.
 #'
 #' @return Invisibly `NULL`.
 #'
 #' @importFrom automerge am_text_content am_text_update
 #' @noRd
-install_editor_sync <- function(input, st, poll_ms = 250L) {
+install_editor_sync <- function(input, st, set_editor, poll_ms = 250L) {
   # Outgoing: debounced editor changes -> minimal diff -> push.
   shiny::observeEvent(
     input$content,
@@ -164,54 +172,21 @@ install_editor_sync <- function(input, st, poll_ms = 250L) {
     current <- poll_doc_to_editor(target, st$shown)
     if (!is.null(current)) {
       st$shown <- current
-      bslib::update_code_editor("content", value = current)
+      set_editor(current)
     }
   })
 
   invisible()
 }
 
-#' Build the live code editor body shared by both editors
+#' Edit text live in a single-window React (CodeMirror) Shiny app
 #'
-#' The [bslib::input_code_editor()] (id `"content"`) plus the streaming shim
-#' that flushes its value to R on a debounce, used by both [edit_in_shiny()]
-#' and [amsync_app()]'s editor card. Returned as a tag list to drop inside a
-#' [bslib::card()].
-#'
-#' @param value The editor's initial content.
-#' @param ext File extension (dotted) for syntax highlighting, or `NULL`.
-#' @param debounce Milliseconds to debounce outgoing editor changes.
-#'
-#' @return A shiny tag list.
-#'
-#' @noRd
-editor_body_ui <- function(value, ext, debounce) {
-  shiny::tagList(
-    bslib::card_body(
-      padding = 0,
-      bslib::input_code_editor(
-        "content",
-        value = value,
-        language = ext_to_language(ext),
-        fill = TRUE
-      )
-    ),
-    # input_code_editor() only flushes its value to R on blur / Ctrl+Enter.
-    # This shim hooks the underlying Prism editor's per-change "update" event
-    # and flushes the value (via the binding's onChangeCallback) on a debounce,
-    # giving real-time outgoing sync without losing syntax highlighting.
-    shiny::tags$script(shiny::HTML(editor_stream_js(debounce)))
-  )
-}
-
-#' Edit text live in a Shiny app with a bslib code editor
-#'
-#' Spins up a single-purpose Shiny app whose only control is a
-#' [bslib::input_code_editor()] populated with the text at `at`, plus a
-#' **Close** button. While it runs, editor changes are streamed (debounced)
-#' into the live document and pushed, and remote changes are polled back into
-#' the editor. Blocks until the app exits, returning the document's final
-#' content.
+#' Spins up a single-purpose [shinyreact::page_react()] gadget showing the React
+#' CodeMirror editor (the app's `"edit"` view) populated with the text at `at`,
+#' plus a **Close** button. While it runs, editor changes are streamed
+#' (debounced) into the live document and pushed, and remote changes are polled
+#' back into the editor. Blocks until the app exits, returning the document's
+#' final content.
 #'
 #' @param doc An `amsync_doc` handle.
 #' @param at Character path to the text object.
@@ -224,32 +199,18 @@ editor_body_ui <- function(value, ext, debounce) {
 edit_in_shiny <- function(doc, at, ext = NULL, debounce = 300L) {
   if (
     !requireNamespace("shiny", quietly = TRUE) ||
-      !requireNamespace("bslib", quietly = TRUE)
+      !requireNamespace("shinyreact", quietly = TRUE)
   ) {
     stop(
-      "Editing a document requires the 'shiny' and 'bslib' packages.\n",
-      'Install them with install.packages(c("shiny", "bslib")).'
+      "Editing a document requires the 'shiny' and 'shinyreact' packages.\n",
+      'Install shiny with install.packages("shiny") and shinyreact with ',
+      'pak::pak("posit-dev/shinyreact").'
     )
   }
 
   base <- am_text_content(navigate_to_text(doc$doc, at))
 
-  ui <- bslib::page_fillable(
-    title = "amsync",
-    padding = 0,
-    bslib::card(
-      bslib::card_header(
-        class = "d-flex justify-content-between align-items-center",
-        shiny::span("Edit synced text (live)"),
-        shiny::actionButton(
-          "close",
-          "Close",
-          class = "btn-sm btn-outline-secondary"
-        )
-      ),
-      editor_body_ui(base, ext, debounce)
-    )
-  )
+  ui <- shinyreact::page_react(amsync_react_dep(), title = "amsync")
 
   server <- function(input, output, session) {
     # Editor state lives in a plain environment read by the sync observers
@@ -260,7 +221,28 @@ edit_in_shiny <- function(doc, at, ext = NULL, debounce = 300L) {
     st$at <- at
     st$base <- base
     st$shown <- base
-    install_editor_sync(input, st)
+    st$editor_rev <- 0L
+
+    rv <- shiny::reactiveValues(editor = NULL)
+
+    # Push content to the React editor by bumping the revision it watches.
+    set_editor <- function(value) {
+      st$editor_rev <- st$editor_rev + 1L
+      rv$editor <- list(
+        path = paste(at, collapse = "/"),
+        value = value,
+        ext = if (is.null(ext)) "" else ext,
+        rev = st$editor_rev,
+        debounce = as.integer(debounce)
+      )
+    }
+
+    # Drive the React app straight to the standalone editor view.
+    output$view <- shinyreact::reactive_output("edit")
+    output$editor_doc <- shinyreact::reactive_output(rv$editor)
+
+    install_editor_sync(input, st, set_editor)
+    set_editor(base) # load the initial content
 
     # Stop exactly once; the Close button or window-close ends the session.
     # Closing the editor returns to the file picker (in a browse loop), so it
@@ -278,104 +260,6 @@ edit_in_shiny <- function(doc, at, ext = NULL, debounce = 300L) {
   }
 
   shiny::runGadget(shiny::shinyApp(ui, server), stopOnCancel = FALSE)
-}
-
-#' JavaScript that streams the code editor's contents to Shiny on a debounce
-#'
-#' Waits for the `<bslib-code-editor id="content">` web component and its
-#' underlying Prism editor, then forwards every content change to Shiny through
-#' the input binding's `onChangeCallback`, debounced by `debounce` ms.
-#'
-#' @param debounce Debounce delay in milliseconds.
-#'
-#' @return A character scalar of JavaScript.
-#'
-#' @noRd
-editor_stream_js <- function(debounce) {
-  sprintf(
-    "(function() {
-  var DEBOUNCE = %d;
-  function init() {
-    var el = document.getElementById('content');
-    if (!el || !el.prismEditor) { setTimeout(init, 50); return; }
-    var timer = null;
-    el.prismEditor.on('update', function() {
-      if (timer) { clearTimeout(timer); }
-      timer = setTimeout(function() {
-        timer = null;
-        el.onChangeCallback(false);
-      }, DEBOUNCE);
-    });
-  }
-  init();
-})();",
-    as.integer(debounce)
-  )
-}
-
-#' Map a file extension to a code-editor language
-#'
-#' Returns one of the languages supported by [bslib::input_code_editor()],
-#' falling back to `"plain"` for unknown or missing extensions.
-#'
-#' @param ext File extension, with or without a leading dot, or `NULL`.
-#'
-#' @return A character scalar language name.
-#'
-#' @noRd
-ext_to_language <- function(ext) {
-  if (is.null(ext) || !nzchar(ext)) {
-    return("plain")
-  }
-  switch(
-    tolower(sub("^\\.", "", ext)),
-    r = ,
-    rprofile = "r",
-    py = "python",
-    jl = "julia",
-    sql = "sql",
-    js = ,
-    mjs = ,
-    cjs = ,
-    jsx = "javascript",
-    ts = ,
-    tsx = "typescript",
-    htm = ,
-    html = "html",
-    css = "css",
-    scss = "scss",
-    sass = "sass",
-    json = "json",
-    md = ,
-    markdown = ,
-    qmd = ,
-    rmd = "markdown",
-    yml = ,
-    yaml = "yaml",
-    svg = ,
-    xml = "xml",
-    toml = "toml",
-    cfg = ,
-    conf = ,
-    ini = "ini",
-    sh = ,
-    zsh = ,
-    bash = "bash",
-    dockerfile = "docker",
-    tex = ,
-    latex = "latex",
-    c = ,
-    h = ,
-    cc = ,
-    hh = ,
-    cxx = ,
-    hpp = ,
-    cpp = "cpp",
-    rs = "rust",
-    patch = ,
-    diff = "diff",
-    "plain"
-  )
 }
 
 #' Preserve the base string's trailing-newline state

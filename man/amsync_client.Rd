@@ -46,7 +46,7 @@ immediately.}
 \item{\code{edit(at = "text", ext = NULL, debounce = 300L)}}{Open this
 document's text object at \code{at} in a live Shiny code editor that syncs
 both ways, blocking until closed (requires \pkg{shiny} and
-\pkg{bslib}). \code{at} is a key or character-vector path to an \code{am_text}
+\pkg{shinyreact}). \code{at} is a key or character-vector path to an \code{am_text}
 object, \code{ext} (e.g. \code{".md"}) selects syntax highlighting, and
 \code{debounce} is the millisecond delay before pushing keystrokes. See
 Details.}
@@ -78,7 +78,8 @@ have unsynced edits — otherwise any changes made since the last
 \code{sync}-interval tick may be lost.
 
 \strong{Live editing.} A handle's \verb{$edit()} opens its text object in a live
-\code{\link[bslib:input_code_editor]{bslib::input_code_editor()}} that syncs both ways: as you type, the minimal
+CodeMirror editor (a React frontend rendered with \pkg{shinyreact}) that syncs
+both ways: as you type, the minimal
 diff is written to the live document and pushed (debounced); when the text
 changes remotely, the editor updates to the merged result. There is no
 \strong{Save} button — every edit is applied live. It syncs whole-text snapshots,

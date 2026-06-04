@@ -104,7 +104,7 @@ join_msg <- function(peer_id) {
 #'     \item{`edit(at = "text", ext = NULL, debounce = 300L)`}{Open this
 #'       document's text object at `at` in a live Shiny code editor that syncs
 #'       both ways, blocking until closed (requires \pkg{shiny} and
-#'       \pkg{bslib}). `at` is a key or character-vector path to an `am_text`
+#'       \pkg{shinyreact}). `at` is a key or character-vector path to an `am_text`
 #'       object, `ext` (e.g. `".md"`) selects syntax highlighting, and
 #'       `debounce` is the millisecond delay before pushing keystrokes. See
 #'       Details.}
@@ -126,7 +126,8 @@ join_msg <- function(peer_id) {
 #' `sync`-interval tick may be lost.
 #'
 #' **Live editing.** A handle's `$edit()` opens its text object in a live
-#' [bslib::input_code_editor()] that syncs both ways: as you type, the minimal
+#' CodeMirror editor (a React frontend rendered with \pkg{shinyreact}) that syncs
+#' both ways: as you type, the minimal
 #' diff is written to the live document and pushed (debounced); when the text
 #' changes remotely, the editor updates to the merged result. There is no
 #' **Save** button — every edit is applied live. It syncs whole-text snapshots,
