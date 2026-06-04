@@ -120,6 +120,7 @@ body {
 }
 .amsync-field input {
   font: inherit;
+  font-weight: 400;
   width: 100%;
   padding: 9px 12px;
   border: 1px solid var(--amsync-border);
@@ -130,6 +131,7 @@ body {
 }
 .amsync-field input::placeholder {
   color: #9aa4af;
+  font-weight: 400;
 }
 .amsync-field input:focus {
   outline: none;
