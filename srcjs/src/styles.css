@@ -137,34 +137,35 @@ body {
   box-shadow: 0 0 0 3px var(--amsync-accent-soft);
 }
 
-/* Optional sign-in row */
+/* Optional sign-in */
 .amsync-signin-auth {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin: -2px 0 18px;
+  margin-bottom: 18px;
 }
-.amsync-link-btn {
+.amsync-secondary-btn {
   font: inherit;
-  font-size: 13px;
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--amsync-accent);
+  font-weight: 500;
+  width: 100%;
+  padding: 9px 16px;
+  border: 1px solid var(--amsync-border);
+  border-radius: 8px;
+  background: var(--amsync-bg);
+  color: var(--amsync-fg);
   cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
-.amsync-link-btn:hover {
-  text-decoration: underline;
+.amsync-secondary-btn:hover {
+  background: var(--amsync-bg-subtle);
+  border-color: #b9c0c8;
 }
-.amsync-status {
+.amsync-auth-hint {
+  display: block;
+  margin-top: 6px;
   font-size: 12px;
-}
-.amsync-status.ok {
-  color: var(--amsync-success);
-}
-.amsync-status.muted {
   color: var(--amsync-muted);
+  text-align: center;
+}
+.amsync-auth-hint.ok {
+  color: var(--amsync-success);
 }
 
 /* Advanced disclosure */
