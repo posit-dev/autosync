@@ -66,10 +66,12 @@ export function ConnectScreen() {
         </label>
 
         <div className="amsync-signin-auth">
-          <button type="button" className="amsync-link-btn" onClick={authenticate}>
-            {authed ? "Re-authenticate" : "Sign in (optional)"}
+          <button type="button" className="amsync-secondary-btn" onClick={authenticate}>
+            {authed ? "Re-authenticate" : "Sign in"}
           </button>
-          {authed && <span className="amsync-status ok">✓ signed in</span>}
+          <span className={authed ? "amsync-auth-hint ok" : "amsync-auth-hint"}>
+            {authed ? "✓ signed in" : "Optional — only for servers that require auth"}
+          </span>
         </div>
 
         <details className="amsync-advanced">
