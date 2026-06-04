@@ -248,17 +248,46 @@ test_that("Connect warns and stays put when the URL or project ID is blank", {
   })
 })
 
-test_that("a failed Connect stays on the connect screen", {
+test_that("a persistently failing Connect stays on the connect screen", {
   skip_if_not_installed("shiny")
   skip_if_not_installed("shinyreact")
 
-  local_mocked_bindings(amsync_project = function(...) stop("cannot connect"))
+  # Stub the inter-retry pause so the retries don't sleep through the test.
+  tries <- 0L
+  local_mocked_bindings(retry_pause = function() invisible())
+  local_mocked_bindings(amsync_project = function(...) {
+    tries <<- tries + 1L
+    stop("cannot connect")
+  })
   app <- build_amsync_app("", "", NULL, NULL, 5000L, "files", 300L)
   shiny::testServer(app, {
     session$setInputs(url = "wss://x/ws", proj_id = "DOC123")
     session$setInputs(connect = 1)
+    expect_equal(tries, 6L) # initial attempt + 5 retries
     expect_equal(rv$view, "connect")
     expect_null(st$proj)
+  })
+})
+
+test_that("Connect retries a transient connection failure then succeeds", {
+  skip_if_not_installed("shiny")
+  skip_if_not_installed("shinyreact")
+
+  local_mocked_bindings(retry_pause = function() invisible())
+  attempt <- 0L
+  local_mocked_bindings(
+    amsync_project = function(url, proj_id, token = NULL, ...) {
+      attempt <<- attempt + 1L
+      if (attempt < 3L) stop("transient")
+      list(paths = function() character(0))
+    }
+  )
+  app <- build_amsync_app("", "", NULL, NULL, 5000L, "files", 300L)
+  shiny::testServer(app, {
+    session$setInputs(url = "wss://x/ws", proj_id = "DOC123")
+    session$setInputs(connect = 1)
+    expect_equal(attempt, 3L) # failed twice, connected on the third try
+    expect_equal(rv$view, "browse")
   })
 })
 
