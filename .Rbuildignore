@@ -18,3 +18,4 @@
 ^\.automerge$
 ^codecov\.yml$
 ^cran-comments\.md$
+^srcjs$
