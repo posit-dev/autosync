@@ -3,6 +3,7 @@
 
 import { useShinyEvent, useShinyOutputValue } from "./shiny";
 import { FileTreeView } from "./FileTree";
+import { FileIcon } from "./FileIcon";
 import { Editor } from "./Editor";
 
 export function BrowseScreen() {
@@ -43,7 +44,10 @@ export function BrowseScreen() {
         {selected ? (
           <div className="amsync-editor-card">
             <div className="amsync-editor-header">
-              <span className="amsync-editor-path">{selected}</span>
+              <span className="amsync-editor-title">
+                <FileIcon path={selected} className="amsync-file-icon" />
+                <span className="amsync-editor-path">{selected}</span>
+              </span>
               <span className="amsync-editor-live">live</span>
             </div>
             <Editor />
