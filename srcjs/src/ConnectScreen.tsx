@@ -22,7 +22,6 @@ export function ConnectScreen() {
   const [clientSecret, setClientSecret] = useShinyInput<string>("client_secret", "");
   const [issuer, setIssuer] = useShinyInput<string>("issuer", "");
 
-  const authenticate = useShinyEvent("authenticate");
   const connect = useShinyEvent("connect");
   const exit = useShinyEvent("exit");
 
@@ -45,6 +44,7 @@ export function ConnectScreen() {
           amsync<span className="amsync-brand-dot">.</span>
         </div>
         <p className="amsync-signin-subtitle">Connect to a sync project</p>
+        {authed && <p className="amsync-signin-authed">✓ signed in</p>}
 
         <label className="amsync-field">
           <span>Server URL</span>
@@ -65,18 +65,13 @@ export function ConnectScreen() {
           />
         </label>
 
-        <div className="amsync-signin-auth">
-          <button type="button" className="amsync-secondary-btn" onClick={authenticate}>
-            {authed ? "Re-authenticate" : "Sign in"}
-          </button>
-          <span className={authed ? "amsync-auth-hint ok" : "amsync-auth-hint"}>
-            {authed ? "✓ signed in" : "Optional — only for servers that require auth"}
-          </span>
-        </div>
-
         <details className="amsync-advanced">
           <summary>Advanced</summary>
           <div className="amsync-advanced-body">
+            <p className="amsync-advanced-note">
+              Provide a client ID to sign in (OIDC) automatically when you
+              connect. Leave blank for open servers.
+            </p>
             <label className="amsync-field">
               <span>OIDC client ID</span>
               <input

@@ -139,35 +139,18 @@ body {
   box-shadow: 0 0 0 3px var(--amsync-accent-soft);
 }
 
-/* Optional sign-in */
-.amsync-signin-auth {
-  margin-bottom: 18px;
-}
-.amsync-secondary-btn {
-  font: inherit;
-  font-weight: 500;
-  width: 100%;
-  padding: 9px 16px;
-  border: 1px solid var(--amsync-border);
-  border-radius: 8px;
-  background: var(--amsync-bg);
-  color: var(--amsync-fg);
-  cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
-}
-.amsync-secondary-btn:hover {
-  background: var(--amsync-bg-subtle);
-  border-color: #b9c0c8;
-}
-.amsync-auth-hint {
-  display: block;
-  margin-top: 6px;
-  font-size: 12px;
-  color: var(--amsync-muted);
+/* Signed-in indicator (shown when a token is already held) */
+.amsync-signin-authed {
+  margin: -22px 0 22px;
   text-align: center;
-}
-.amsync-auth-hint.ok {
+  font-size: 12px;
   color: var(--amsync-success);
+}
+.amsync-advanced-note {
+  margin: 0 0 14px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--amsync-muted);
 }
 
 /* Advanced disclosure */

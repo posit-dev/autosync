@@ -175,32 +175,7 @@ build_amsync_app <- function(
       issuer = oidc_issuer()
     ))
 
-    # --- Connect screen: authenticate ---
-
-    # amsync_token() drives the shared event loop with run_now() while it waits
-    # for the OAuth callback; run_now() is reentrant-safe, so calling it from
-    # within this observer is fine. The browser opening is the user's feedback.
-    shiny::observeEvent(input$authenticate, {
-      issuer <- trimws(input$issuer %||% "")
-      token <- tryCatch(
-        amsync_token(
-          client_id = trimws(input$client_id %||% ""),
-          client_secret = input$client_secret %||% "",
-          issuer = if (nzchar(issuer)) issuer else oidc_issuer()
-        ),
-        error = function(e) {
-          notify(session, "error", paste("Authentication failed:", conditionMessage(e)))
-          NULL
-        }
-      )
-      if (!is.null(token)) {
-        st$token <- token
-        rv$authed <- TRUE
-        notify(session, "message", "Signed in.")
-      }
-    })
-
-    # --- Connect screen: connect and switch to browsing ---
+    # --- Connect screen: authenticate (if details given) and start browsing ---
 
     shiny::observeEvent(input$connect, {
       url_in <- trimws(input$url %||% "")
@@ -209,6 +184,35 @@ build_amsync_app <- function(
         notify(session, "warning", "Enter both a server URL and a project ID.")
         return()
       }
+
+      # Authenticate as part of connecting: when an OIDC client ID is provided
+      # (and we don't already hold a token) run the sign-in flow first, otherwise
+      # connect tokenless for open servers. amsync_token() drives the shared
+      # event loop with run_now() (reentrant-safe) while it waits for the OAuth
+      # callback; the browser opening is the user's feedback.
+      if (is.null(st$token)) {
+        client_id <- trimws(input$client_id %||% "")
+        if (nzchar(client_id)) {
+          issuer <- trimws(input$issuer %||% "")
+          token <- tryCatch(
+            amsync_token(
+              client_id = client_id,
+              client_secret = input$client_secret %||% "",
+              issuer = if (nzchar(issuer)) issuer else oidc_issuer()
+            ),
+            error = function(e) {
+              notify(session, "error", paste("Authentication failed:", conditionMessage(e)))
+              NULL
+            }
+          )
+          if (is.null(token)) {
+            return() # auth failed; stay on the connect screen
+          }
+          st$token <- token
+          rv$authed <- TRUE
+        }
+      }
+
       proj <- tryCatch(
         amsync_project(
           url_in,

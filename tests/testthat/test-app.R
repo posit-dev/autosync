@@ -161,23 +161,65 @@ test_that("the app connects, browses, and edits over a live server", {
   })
 })
 
-test_that("the Authenticate button signs in via amsync_token()", {
+test_that("Connect auto-authenticates when an OIDC client ID is provided", {
   skip_if_not_installed("shiny")
   skip_if_not_installed("shinyreact")
 
+  used_token <- NULL
   local_mocked_bindings(amsync_token = function(...) "fresh.jwt")
+  local_mocked_bindings(
+    amsync_project = function(url, proj_id, token = NULL, ...) {
+      used_token <<- token
+      list(paths = function() character(0))
+    }
+  )
   app <- build_amsync_app("", "", NULL, NULL, 5000L, "files", 300L)
   shiny::testServer(app, {
     expect_false(rv$authed)
     # A non-empty issuer is used as-is (exercises the issuer branch).
-    session$setInputs(client_id = "cid", client_secret = "sec", issuer = "https://issuer")
-    session$setInputs(authenticate = 1)
-    expect_true(rv$authed)
+    session$setInputs(
+      url = "wss://x/ws",
+      proj_id = "DOC123",
+      client_id = "cid",
+      client_secret = "sec",
+      issuer = "https://issuer"
+    )
+    session$setInputs(connect = 1)
     expect_equal(st$token, "fresh.jwt")
+    expect_true(rv$authed)
+    expect_equal(used_token, "fresh.jwt") # token forwarded to amsync_project()
+    expect_equal(rv$view, "browse")
   })
 })
 
-test_that("a failed Authenticate leaves the session signed out", {
+test_that("Connect connects tokenless when no OIDC client ID is given", {
+  skip_if_not_installed("shiny")
+  skip_if_not_installed("shinyreact")
+
+  token_called <- FALSE
+  used_token <- "unset"
+  local_mocked_bindings(amsync_token = function(...) {
+    token_called <<- TRUE
+    "x"
+  })
+  local_mocked_bindings(
+    amsync_project = function(url, proj_id, token = NULL, ...) {
+      used_token <<- token
+      list(paths = function() character(0))
+    }
+  )
+  app <- build_amsync_app("", "", NULL, NULL, 5000L, "files", 300L)
+  shiny::testServer(app, {
+    session$setInputs(url = "wss://x/ws", proj_id = "DOC123") # no client_id
+    session$setInputs(connect = 1)
+    expect_false(token_called) # no authentication attempted
+    expect_false(rv$authed)
+    expect_null(used_token) # connected without a token
+    expect_equal(rv$view, "browse")
+  })
+})
+
+test_that("a failed auto-authentication stays on the connect screen", {
   skip_if_not_installed("shiny")
   skip_if_not_installed("shinyreact")
 
@@ -185,10 +227,11 @@ test_that("a failed Authenticate leaves the session signed out", {
   app <- build_amsync_app("", "", NULL, NULL, 5000L, "files", 300L)
   shiny::testServer(app, {
     # Blank issuer falls back to oidc_issuer() (the other branch).
-    session$setInputs(issuer = "")
-    session$setInputs(authenticate = 1)
+    session$setInputs(url = "wss://x/ws", proj_id = "DOC123", client_id = "cid", issuer = "")
+    session$setInputs(connect = 1)
     expect_false(rv$authed)
-    expect_null(st$token)
+    expect_null(st$proj)
+    expect_equal(rv$view, "connect")
   })
 })
 
