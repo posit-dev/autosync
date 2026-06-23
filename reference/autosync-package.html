@@ -54,7 +54,7 @@ synchronizing documents hosted on remote servers.</p>
     <h2 id="main-functions">Main Functions<a class="anchor" aria-label="anchor" href="#main-functions"></a></h2>
 
 
-<dl><dt><code><a href="amsync_server.html">amsync_server()</a></code></dt>
+<dl><dt><code><a href="sync_server.html">sync_server()</a></code></dt>
 <dd><p>Create a new sync server with <code>$start()</code> and
 <code>$close()</code> methods</p></dd>
 
@@ -75,23 +75,6 @@ synchronizing documents hosted on remote servers.</p>
 
 <dt><code><a href="generate_document_id.html">generate_document_id()</a></code></dt>
 <dd><p>Generate a new document ID</p></dd>
-
-
-</dl></div>
-    <div class="section level2">
-    <h2 id="browsing-and-editing">Browsing and Editing<a class="anchor" aria-label="anchor" href="#browsing-and-editing"></a></h2>
-
-
-<dl><dt><code><a href="amsync_app.html">amsync_app()</a></code></dt>
-<dd><p>Launch a single-window Shiny app to connect to a
-project, browse its file tree, and edit files in a live code editor</p></dd>
-
-<dt><code><a href="amsync_project.html">amsync_project()</a></code></dt>
-<dd><p>Open the files in a project document</p></dd>
-
-<dt><code>$edit()</code></dt>
-<dd><p>The document handle from <code><a href="amsync_client.html">amsync_client()</a></code>'s <code>$open_doc()</code>
-edits a synced text object in a live Shiny code editor</p></dd>
 
 
 </dl></div>
@@ -120,7 +103,7 @@ Messages are CBOR-encoded and include:</p><dl><dt>join/peer</dt>
 
 <div class="sourceCode"><pre><code><span></span>
 <span><span class="co"># Create and start a server</span></span>
-<span><span class="va">server</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/amsync_server.html">amsync_server</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">server</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sync_server.html">sync_server</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">server</span><span class="op">$</span><span class="fu">start</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">server</span><span class="op">$</span><span class="va">url</span></span>
 <span></span>

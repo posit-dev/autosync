@@ -12,7 +12,7 @@ get_document(server, doc_id)
 
 - server:
 
-  An amsync_server object.
+  A sync_server object.
 
 - doc_id:
 

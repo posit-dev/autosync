@@ -33,7 +33,7 @@ Create a WebSocket sync server:
 
 library(autosync)
 
-server <- amsync_server()
+server <- sync_server()
 server$start()
 server
 
@@ -49,7 +49,7 @@ With TLS for secure connections:
 cert <- nanonext::write_cert()
 tls <- nanonext::tls_config(server = cert$server)
 
-server <- amsync_server(tls = tls)
+server <- sync_server(tls = tls)
 server$start()
 server$url
 ```
@@ -93,7 +93,7 @@ alone — for those, set only `OIDC_CLIENT_ID` and leave
 cert <- nanonext::write_cert()
 tls <- nanonext::tls_config(server = cert$server)
 
-server <- amsync_server(
+server <- sync_server(
   tls = tls,  # TLS required when auth is enabled
   auth = auth_config(allowed_domains = "posit.co")
 )
@@ -104,10 +104,10 @@ Clients obtain a token interactively, then pass it when fetching:
 
 ``` r
 
-token <- amsync_token()
+token <- sync_token()
 
 tlsclient <- nanonext::tls_config(client = cert$client)
-doc <- amsync_fetch(
+doc <- sync_fetch(
   server$url,
   "35ei6ouA7nLhtjmf3d9xk1KKvtKv",
   token = token,
@@ -131,7 +131,7 @@ Announce all documents to every client that connects:
 
 ``` r
 
-server <- amsync_server(share = TRUE)
+server <- sync_server(share = TRUE)
 ```
 
 Combine with authentication and use a `share` function for fine-grained
@@ -143,7 +143,7 @@ can look up the authenticated email on the connection to decide:
 # Allow list of emails that can access documents
 allowed <- c("alice@example.com", "bob@example.com")
 
-server <- amsync_server(
+server <- sync_server(
   tls = tls,
   auth = auth_config(),
   share = function(client_id, doc_id) {
@@ -186,13 +186,13 @@ Fetch documents from any automerge-repo sync server:
 ``` r
 
 # Fetch from public sync server
-doc <- amsync_fetch("wss://sync.automerge.org", "your-document-id")
+doc <- sync_fetch("wss://sync.automerge.org", "your-document-id")
 
 # Inspect document structure
 str(doc)
 
 # Or verbose fetch for debugging sync issues
-doc <- amsync_fetch("wss://sync.automerge.org", "your-document-id", verbose = TRUE)
+doc <- sync_fetch("wss://sync.automerge.org", "your-document-id", verbose = TRUE)
 ```
 
 ## Utilities
@@ -213,18 +213,6 @@ doc_id <- generate_document_id()
 
 ## All functions
 
-- [`amsync_app()`](http://shikokuchuo.net/autosync/reference/amsync_app.md)
-  : Launch the autosync browser app
-- [`amsync_client()`](http://shikokuchuo.net/autosync/reference/amsync_client.md)
-  : Open a persistent sync connection
-- [`amsync_fetch()`](http://shikokuchuo.net/autosync/reference/amsync_fetch.md)
-  : Fetch a document from a sync server
-- [`amsync_project()`](http://shikokuchuo.net/autosync/reference/amsync_project.md)
-  : Open files from a project document
-- [`amsync_server()`](http://shikokuchuo.net/autosync/reference/amsync_server.md)
-  : Create an Automerge sync server
-- [`amsync_token()`](http://shikokuchuo.net/autosync/reference/amsync_token.md)
-  : Obtain an OIDC token interactively
 - [`auth_config()`](http://shikokuchuo.net/autosync/reference/auth_config.md)
   : Create an authentication configuration
 - [`autosync-package`](http://shikokuchuo.net/autosync/reference/autosync-package.md)
@@ -238,4 +226,12 @@ doc_id <- generate_document_id()
   : Get a document from the server
 - [`list_documents()`](http://shikokuchuo.net/autosync/reference/list_documents.md)
   : List all document IDs
+- [`sync_client()`](http://shikokuchuo.net/autosync/reference/sync_client.md)
+  : Open a persistent sync connection
+- [`sync_fetch()`](http://shikokuchuo.net/autosync/reference/sync_fetch.md)
+  : Fetch a document from a sync server
+- [`sync_server()`](http://shikokuchuo.net/autosync/reference/sync_server.md)
+  : Create an Automerge sync server
+- [`sync_token()`](http://shikokuchuo.net/autosync/reference/sync_token.md)
+  : Obtain an OIDC token interactively
 

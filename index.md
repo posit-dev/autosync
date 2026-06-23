@@ -33,7 +33,7 @@ Create a WebSocket sync server:
 
 library(autosync)
 
-server <- amsync_server()
+server <- sync_server()
 server$start()
 server
 
@@ -49,7 +49,7 @@ With TLS for secure connections:
 cert <- nanonext::write_cert()
 tls <- nanonext::tls_config(server = cert$server)
 
-server <- amsync_server(tls = tls)
+server <- sync_server(tls = tls)
 server$start()
 server$url
 ```
@@ -93,7 +93,7 @@ alone — for those, set only `OIDC_CLIENT_ID` and leave
 cert <- nanonext::write_cert()
 tls <- nanonext::tls_config(server = cert$server)
 
-server <- amsync_server(
+server <- sync_server(
   tls = tls,  # TLS required when auth is enabled
   auth = auth_config(allowed_domains = "posit.co")
 )
@@ -104,10 +104,10 @@ Clients obtain a token interactively, then pass it when fetching:
 
 ``` r
 
-token <- amsync_token()
+token <- sync_token()
 
 tlsclient <- nanonext::tls_config(client = cert$client)
-doc <- amsync_fetch(
+doc <- sync_fetch(
   server$url,
   "35ei6ouA7nLhtjmf3d9xk1KKvtKv",
   token = token,
@@ -131,7 +131,7 @@ Announce all documents to every client that connects:
 
 ``` r
 
-server <- amsync_server(share = TRUE)
+server <- sync_server(share = TRUE)
 ```
 
 Combine with authentication and use a `share` function for fine-grained
@@ -143,7 +143,7 @@ can look up the authenticated email on the connection to decide:
 # Allow list of emails that can access documents
 allowed <- c("alice@example.com", "bob@example.com")
 
-server <- amsync_server(
+server <- sync_server(
   tls = tls,
   auth = auth_config(),
   share = function(client_id, doc_id) {
@@ -186,13 +186,13 @@ Fetch documents from any automerge-repo sync server:
 ``` r
 
 # Fetch from public sync server
-doc <- amsync_fetch("wss://sync.automerge.org", "your-document-id")
+doc <- sync_fetch("wss://sync.automerge.org", "your-document-id")
 
 # Inspect document structure
 str(doc)
 
 # Or verbose fetch for debugging sync issues
-doc <- amsync_fetch("wss://sync.automerge.org", "your-document-id", verbose = TRUE)
+doc <- sync_fetch("wss://sync.automerge.org", "your-document-id", verbose = TRUE)
 ```
 
 ## Utilities

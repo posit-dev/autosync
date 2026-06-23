@@ -12,7 +12,7 @@ create_document(server, doc_id = NULL)
 
 - server:
 
-  An amsync_server object.
+  A sync_server object.
 
 - doc_id:
 

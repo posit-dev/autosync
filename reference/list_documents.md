@@ -12,7 +12,7 @@ list_documents(server)
 
 - server:
 
-  An amsync_server object.
+  A sync_server object.
 
 ## Value
 

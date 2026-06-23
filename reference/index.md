@@ -2,18 +2,6 @@
 
 ## All functions
 
-- [`amsync_app()`](http://shikokuchuo.net/autosync/reference/amsync_app.md)
-  : Launch the autosync browser app
-- [`amsync_client()`](http://shikokuchuo.net/autosync/reference/amsync_client.md)
-  : Open a persistent sync connection
-- [`amsync_fetch()`](http://shikokuchuo.net/autosync/reference/amsync_fetch.md)
-  : Fetch a document from a sync server
-- [`amsync_project()`](http://shikokuchuo.net/autosync/reference/amsync_project.md)
-  : Open files from a project document
-- [`amsync_server()`](http://shikokuchuo.net/autosync/reference/amsync_server.md)
-  : Create an Automerge sync server
-- [`amsync_token()`](http://shikokuchuo.net/autosync/reference/amsync_token.md)
-  : Obtain an OIDC token interactively
 - [`auth_config()`](http://shikokuchuo.net/autosync/reference/auth_config.md)
   : Create an authentication configuration
 - [`autosync-package`](http://shikokuchuo.net/autosync/reference/autosync-package.md)
@@ -27,3 +15,11 @@
   : Get a document from the server
 - [`list_documents()`](http://shikokuchuo.net/autosync/reference/list_documents.md)
   : List all document IDs
+- [`sync_client()`](http://shikokuchuo.net/autosync/reference/sync_client.md)
+  : Open a persistent sync connection
+- [`sync_fetch()`](http://shikokuchuo.net/autosync/reference/sync_fetch.md)
+  : Fetch a document from a sync server
+- [`sync_server()`](http://shikokuchuo.net/autosync/reference/sync_server.md)
+  : Create an Automerge sync server
+- [`sync_token()`](http://shikokuchuo.net/autosync/reference/sync_token.md)
+  : Obtain an OIDC token interactively
