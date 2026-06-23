@@ -97,10 +97,10 @@ when there are no changes.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An environment of class <code>"sync_client"</code> with reference semantics,
+    <p>An environment of class <code>"autosync_client"</code> with reference semantics,
 representing the connection:</p><dl><dt><code>open_doc(doc_id, timeout)</code></dt>
 <dd><p>Open a live document over this
-connection and return a <code>sync_doc</code> handle for it (see below).
+connection and return a <code>autosync_doc</code> handle for it (see below).
 Repeated calls for the same <code>doc_id</code> reuse the document already open
 on the connection rather than requesting it again.</p></dd>
 
@@ -111,7 +111,7 @@ on the connection rather than requesting it again.</p></dd>
 <dd><p>Logical, whether the connection is active.</p></dd>
 
 
-</dl><p>A <code>sync_doc</code> handle returned by <code>$open_doc()</code> is itself an environment
+</dl><p>A <code>autosync_doc</code> handle returned by <code>$open_doc()</code> is itself an environment
 with:</p><dl><dt><code>doc</code></dt>
 <dd><p>The live automerge document, kept in sync with the server.</p></dd>
 

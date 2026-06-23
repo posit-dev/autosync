@@ -34,10 +34,7 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="autosync-development-version">autosync (development version)<a class="anchor" aria-label="anchor" href="#autosync-development-version"></a></h2>
-<ul><li>The <code>amsync_*</code> connector functions were renamed <code>sync_*</code>: <code><a href="../reference/sync_server.html">sync_server()</a></code>, <code><a href="../reference/sync_client.html">sync_client()</a></code>, <code><a href="../reference/sync_fetch.html">sync_fetch()</a></code> and <code><a href="../reference/sync_token.html">sync_token()</a></code> (with S3 classes <code>sync_server</code>, <code>sync_client</code> and <code>sync_doc</code>).</li>
-<li>
-<code><a href="../reference/sync_client.html">sync_client()</a></code> now opens a connection only and no longer takes a <code>doc_id</code>. Open one or more live documents over the connection with the new <code>$open_doc(doc_id)</code> method, which returns a <code>sync_doc</code> handle exposing <code>$doc</code>, <code>$push()</code>, <code>$active</code> and <code>$close()</code>. A single connection can sync several documents, and <code>$close()</code> tears them all down.</li>
-<li>Project browsing and live editing moved to the <code>shinysync</code> package (<code>project_open()</code>, <code>project_app()</code> and <code>project_edit()</code>); autosync no longer depends on <code>shiny</code> or <code>bslib</code>.</li>
+<ul><li>Initial CRAN release.</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.1" id="autosync-001">autosync 0.0.1<a class="anchor" aria-label="anchor" href="#autosync-001"></a></h2>

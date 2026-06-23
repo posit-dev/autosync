@@ -80,8 +80,8 @@ sync_server(
 
 ## Value
 
-A sync_server object inheriting from 'nanoServer', with `$start()` and
-`$close()` methods.
+An autosync_server object inheriting from 'nanoServer', with `$start()`
+and `$close()` methods.
 
 ## Details
 

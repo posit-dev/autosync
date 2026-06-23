@@ -48,12 +48,12 @@ sync_client(url, timeout = 5000L, tls = NULL, token = NULL, interval = 1000L)
 
 ## Value
 
-An environment of class `"sync_client"` with reference semantics,
+An environment of class `"autosync_client"` with reference semantics,
 representing the connection:
 
 - `open_doc(doc_id, timeout)`:
 
-  Open a live document over this connection and return a `sync_doc`
+  Open a live document over this connection and return a `autosync_doc`
   handle for it (see below). Repeated calls for the same `doc_id` reuse
   the document already open on the connection rather than requesting it
   again.
@@ -66,8 +66,8 @@ representing the connection:
 
   Logical, whether the connection is active.
 
-A `sync_doc` handle returned by `$open_doc()` is itself an environment
-with:
+A `autosync_doc` handle returned by `$open_doc()` is itself an
+environment with:
 
 - `doc`:
 

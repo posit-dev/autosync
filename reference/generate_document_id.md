@@ -12,3 +12,10 @@ generate_document_id()
 ## Value
 
 Character string (Base58Check encoded).
+
+## Examples
+
+``` r
+generate_document_id()
+#> [1] "3d7jeteT1RQfYHVQV6jjFWMWPLgC"
+```

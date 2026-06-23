@@ -12,7 +12,7 @@ create_document(server, doc_id = NULL)
 
 - server:
 
-  A sync_server object.
+  An autosync_server object.
 
 - doc_id:
 
@@ -21,3 +21,13 @@ create_document(server, doc_id = NULL)
 ## Value
 
 Document ID string.
+
+## Examples
+
+``` r
+if (FALSE) { # interactive()
+server <- sync_server()
+doc_id <- create_document(server)
+server$close()
+}
+```

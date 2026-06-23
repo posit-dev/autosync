@@ -13,7 +13,7 @@ authenticate_header(auth_config, headers)
 
 - auth_config:
 
-  An amsync_auth_config object.
+  A `autosync_auth_config` object.
 
 - headers:
 

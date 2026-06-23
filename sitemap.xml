@@ -8,7 +8,6 @@
 <url><loc>http://shikokuchuo.net/autosync/reference/auth_config.html</loc></url>
 <url><loc>http://shikokuchuo.net/autosync/reference/authenticate_header.html</loc></url>
 <url><loc>http://shikokuchuo.net/autosync/reference/autosync-package.html</loc></url>
-<url><loc>http://shikokuchuo.net/autosync/reference/close_connection.html</loc></url>
 <url><loc>http://shikokuchuo.net/autosync/reference/create_document.html</loc></url>
 <url><loc>http://shikokuchuo.net/autosync/reference/discover_jwks_uri.html</loc></url>
 <url><loc>http://shikokuchuo.net/autosync/reference/fetch_jwks.html</loc></url>
@@ -18,7 +17,7 @@
 <url><loc>http://shikokuchuo.net/autosync/reference/index.html</loc></url>
 <url><loc>http://shikokuchuo.net/autosync/reference/list_documents.html</loc></url>
 <url><loc>http://shikokuchuo.net/autosync/reference/oidc_issuer.html</loc></url>
-<url><loc>http://shikokuchuo.net/autosync/reference/print.sync_server.html</loc></url>
+<url><loc>http://shikokuchuo.net/autosync/reference/print.autosync_server.html</loc></url>
 <url><loc>http://shikokuchuo.net/autosync/reference/sync_client.html</loc></url>
 <url><loc>http://shikokuchuo.net/autosync/reference/sync_fetch.html</loc></url>
 <url><loc>http://shikokuchuo.net/autosync/reference/sync_server.html</loc></url>

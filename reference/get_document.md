@@ -12,7 +12,7 @@ get_document(server, doc_id)
 
 - server:
 
-  A sync_server object.
+  An autosync_server object.
 
 - doc_id:
 
@@ -21,3 +21,14 @@ get_document(server, doc_id)
 ## Value
 
 Automerge document object, or NULL if not found.
+
+## Examples
+
+``` r
+if (FALSE) { # interactive()
+server <- sync_server()
+doc_id <- create_document(server)
+get_document(server, doc_id)
+server$close()
+}
+```

@@ -51,7 +51,7 @@ auth_config(
 
 ## Value
 
-An amsync_auth_config object.
+An object of class `"autosync_auth_config"`.
 
 ## Details
 
@@ -82,7 +82,7 @@ auth_config(
 #> NULL
 #> 
 #> attr(,"class")
-#> [1] "amsync_auth_config"
+#> [1] "autosync_auth_config"
 
 # Microsoft Entra
 auth_config(
@@ -106,7 +106,7 @@ auth_config(
 #> NULL
 #> 
 #> attr(,"class")
-#> [1] "amsync_auth_config"
+#> [1] "autosync_auth_config"
 
 # Custom validator
 auth_config(
@@ -129,8 +129,8 @@ auth_config(
 #> $custom_validator
 #> function (claims) 
 #> "editors" %in% claims$groups
-#> <environment: 0x55901842d320>
+#> <environment: 0x556b337345f0>
 #> 
 #> attr(,"class")
-#> [1] "amsync_auth_config"
+#> [1] "autosync_auth_config"
 ```
