@@ -28,9 +28,9 @@ oidc_issuer <- function() {
 #' @keywords internal
 discover_jwks_uri <- function(issuer) {
   config_url <- paste0(issuer, "/.well-known/openid-configuration")
-  resp <- nanonext::ncurl(config_url, timeout = 5000L)
+  resp <- ncurl(config_url, timeout = 5000L)
 
-  if (nanonext::is_error_value(resp$data) || resp$status != 200L) {
+  if (is_error_value(resp$data) || resp$status != 200L) {
     stop("Failed to fetch OIDC configuration from: ", config_url)
   }
 
@@ -53,13 +53,13 @@ discover_jwks_uri <- function(issuer) {
 #'
 #' @keywords internal
 fetch_jwks <- function(jwks_uri) {
-  resp <- nanonext::ncurl(
+  resp <- ncurl(
     jwks_uri,
     timeout = 5000L,
     response = "Cache-Control"
   )
 
-  if (nanonext::is_error_value(resp$data) || resp$status != 200L) {
+  if (is_error_value(resp$data) || resp$status != 200L) {
     stop("Failed to fetch JWKS from: ", jwks_uri)
   }
 
@@ -76,7 +76,7 @@ fetch_jwks <- function(jwks_uri) {
       next
     }
     key <- tryCatch(
-      jose::read_jwk(jsonenc(jwk)),
+      read_jwk(jsonenc(jwk)),
       error = function(e) NULL
     )
     if (!is.null(key)) {
@@ -167,7 +167,7 @@ validate_token <- function(
   }
 
   header <- tryCatch(
-    jsondec(jose::base64url_decode(parts[1L])),
+    jsondec(base64dec(parts[1L], url = TRUE)),
     error = function(e) NULL
   )
   if (is.null(header) || is.null(header$kid)) {
@@ -189,7 +189,7 @@ validate_token <- function(
 
   # Verify signature and decode claims
   claims <- tryCatch(
-    jose::jwt_decode_sig(token, key),
+    jwt_decode_sig(token, key),
     error = function(e) {
       msg <- conditionMessage(e)
       if (grepl("expired", msg, ignore.case = TRUE)) {
@@ -329,7 +329,7 @@ validate_token <- function(
 #' @param custom_validator Function(claims) returning TRUE/FALSE for
 #'   custom validation logic. Receives the decoded JWT claims as a list.
 #'
-#' @return An amsync_auth_config object.
+#' @return An object of class `"autosync_auth_config"`.
 #'
 #' @examples
 #' # Google (default issuer)
@@ -380,7 +380,7 @@ auth_config <- function(
       allowed_domains = allowed_domains,
       custom_validator = custom_validator
     ),
-    class = "amsync_auth_config"
+    class = "autosync_auth_config"
   )
 }
 
@@ -496,7 +496,7 @@ sync_token <- function(
 #' Extracts and validates a Bearer token (JWT) from the Authorization header
 #' of the WebSocket upgrade request.
 #'
-#' @param auth_config An amsync_auth_config object.
+#' @param auth_config A `autosync_auth_config` object.
 #' @param headers Named list of HTTP request headers.
 #'
 #' @return List with `valid` (logical), `email` (character or NULL),

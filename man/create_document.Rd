@@ -7,7 +7,7 @@
 create_document(server, doc_id = NULL)
 }
 \arguments{
-\item{server}{A sync_server object.}
+\item{server}{An autosync_server object.}
 
 \item{doc_id}{Optional document ID. If NULL, generates a new ID.}
 }
@@ -16,4 +16,11 @@ Document ID string.
 }
 \description{
 Creates a new empty Automerge document and registers it with the server.
+}
+\examples{
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
+server <- sync_server()
+doc_id <- create_document(server)
+server$close()
+\dontshow{\}) # examplesIf}
 }

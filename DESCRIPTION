@@ -9,8 +9,8 @@ Authors@R: c(
            comment = c(ROR = "03wc8by49"))
   )
 Description: A WebSocket-based implementation of the 'automerge-repo'
-    synchronization protocol used by 'sync.automerge.org'.  Acts as a sync
-    server, enabling R to serve as a synchronization hub for 'Automerge'
+    synchronization protocol used by 'sync.automerge.org'. Acts as a sync
+    server, enabling 'R' to serve as a synchronization hub for 'Automerge'
     clients in 'JavaScript', 'Rust', and other languages, and as a client
     for fetching, editing, and synchronizing documents hosted on remote
     servers.
@@ -27,10 +27,8 @@ Imports:
     later,
     nanonext (>= 1.8.1),
     promises,
-    secretbase (>= 1.2.0),
-    utils
+    secretbase (>= 1.3.0)
 Suggests:
-    httpuv,
     openssl,
     testthat (>= 3.0.0)
 Config/Needs/website: tidyverse/tidytemplate

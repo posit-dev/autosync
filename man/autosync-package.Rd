@@ -4,10 +4,10 @@
 \name{autosync-package}
 \alias{autosync-package}
 \alias{autosync}
-\title{autosync: 'Automerge' Sync Server and Client for R}
+\title{autosync: 'Automerge' Sync Server and Client}
 \description{
 A WebSocket-based implementation of the 'automerge-repo' synchronization
-protocol used by 'sync.automerge.org'. Acts as a sync server, enabling R to
+protocol used by 'sync.automerge.org'. Acts as a sync server, enabling 'R' to
 serve as a synchronization hub for 'Automerge' clients in 'JavaScript',
 'Rust', and other languages, and as a client for fetching, editing, and
 synchronizing documents hosted on remote servers.

@@ -7,7 +7,7 @@
 get_document(server, doc_id)
 }
 \arguments{
-\item{server}{A sync_server object.}
+\item{server}{An autosync_server object.}
 
 \item{doc_id}{Document ID string.}
 }
@@ -16,4 +16,12 @@ Automerge document object, or NULL if not found.
 }
 \description{
 Retrieves an Automerge document by its ID.
+}
+\examples{
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
+server <- sync_server()
+doc_id <- create_document(server)
+get_document(server, doc_id)
+server$close()
+\dontshow{\}) # examplesIf}
 }

@@ -7,11 +7,19 @@
 list_documents(server)
 }
 \arguments{
-\item{server}{A sync_server object.}
+\item{server}{An autosync_server object.}
 }
 \value{
 Character vector of document IDs.
 }
 \description{
 Returns the IDs of all documents currently loaded in the server.
+}
+\examples{
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
+server <- sync_server()
+create_document(server)
+list_documents(server)
+server$close()
+\dontshow{\}) # examplesIf}
 }

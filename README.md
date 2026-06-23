@@ -20,6 +20,14 @@ R sync server and client for [Automerge](https://automerge.org/) CRDT documents.
 
 ## Installation
 
+Install the released version from CRAN:
+
+``` r
+install.packages("autosync")
+```
+
+Or the development version from GitHub:
+
 ``` r
 pak::pak("shikokuchuo/autosync")
 ```
@@ -168,7 +176,8 @@ const repo = new Repo({
 
 ## Client
 
-Fetch documents from any automerge-repo sync server:
+Fetch a document from any automerge-repo sync server in a single,
+one-off retrieval over a throwaway connection:
 
 ``` r
 # Fetch from public sync server
@@ -179,6 +188,31 @@ str(doc)
 
 # Or verbose fetch for debugging sync issues
 doc <- sync_fetch("wss://sync.automerge.org", "your-document-id", verbose = TRUE)
+```
+
+### Live connections
+
+For a persistent connection that keeps documents in sync — receiving
+real-time updates from other peers and flushing local changes — use
+`sync_client()`. Several documents can share a single connection, each
+opened with `$open_doc()`:
+
+``` r
+conn <- sync_client("wss://sync.automerge.org")
+
+# Open a live document over the connection
+doc <- conn$open_doc("your-document-id")
+automerge::am_keys(doc$doc)
+
+# Make local changes and push them to the server
+automerge::am_put(doc$doc, automerge::AM_ROOT, "key", "value")
+doc$push()
+
+# Open another document over the same connection
+other <- conn$open_doc("another-document-id")
+
+# Disconnect (closes every document on the connection)
+conn$close()
 ```
 
 ## Utilities
