@@ -29,11 +29,7 @@ devtools::document()
 devtools::install()
 ```
 
-## Dependencies
-
-Requires development versions of some packages: - `httr2` from
-r-lib/httr2 (for `oauth_server_metadata()`, used by
-[`amsync_token()`](http://shikokuchuo.net/autosync/reference/amsync_token.md))
+## Installation
 
 Install with: `pak::pak("shikokuchuo/autosync")`
 
