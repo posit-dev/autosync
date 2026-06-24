@@ -1,0 +1,26 @@
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>https://posit-dev.github.io/autosync/dev/CLAUDE.html</loc></url>
+<url><loc>https://posit-dev.github.io/autosync/dev/LICENSE-text.html</loc></url>
+<url><loc>https://posit-dev.github.io/autosync/dev/authors.html</loc></url>
+<url><loc>https://posit-dev.github.io/autosync/dev/index.html</loc></url>
+<url><loc>https://posit-dev.github.io/autosync/dev/news/index.html</loc></url>
+<url><loc>https://posit-dev.github.io/autosync/dev/reference/auth_config.html</loc></url>
+<url><loc>https://posit-dev.github.io/autosync/dev/reference/authenticate_header.html</loc></url>
+<url><loc>https://posit-dev.github.io/autosync/dev/reference/autosync-package.html</loc></url>
+<url><loc>https://posit-dev.github.io/autosync/dev/reference/create_document.html</loc></url>
+<url><loc>https://posit-dev.github.io/autosync/dev/reference/discover_jwks_uri.html</loc></url>
+<url><loc>https://posit-dev.github.io/autosync/dev/reference/fetch_jwks.html</loc></url>
+<url><loc>https://posit-dev.github.io/autosync/dev/reference/generate_document_id.html</loc></url>
+<url><loc>https://posit-dev.github.io/autosync/dev/reference/get_document.html</loc></url>
+<url><loc>https://posit-dev.github.io/autosync/dev/reference/get_signing_key.html</loc></url>
+<url><loc>https://posit-dev.github.io/autosync/dev/reference/index.html</loc></url>
+<url><loc>https://posit-dev.github.io/autosync/dev/reference/list_documents.html</loc></url>
+<url><loc>https://posit-dev.github.io/autosync/dev/reference/oidc_issuer.html</loc></url>
+<url><loc>https://posit-dev.github.io/autosync/dev/reference/print.autosync_server.html</loc></url>
+<url><loc>https://posit-dev.github.io/autosync/dev/reference/sync_client.html</loc></url>
+<url><loc>https://posit-dev.github.io/autosync/dev/reference/sync_fetch.html</loc></url>
+<url><loc>https://posit-dev.github.io/autosync/dev/reference/sync_server.html</loc></url>
+<url><loc>https://posit-dev.github.io/autosync/dev/reference/sync_token.html</loc></url>
+<url><loc>https://posit-dev.github.io/autosync/dev/reference/validate_token.html</loc></url>
+</urlset>
+
