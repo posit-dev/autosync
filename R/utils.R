@@ -23,16 +23,6 @@ generate_document_id <- function() base58enc(random(16L, convert = FALSE))
 #' @noRd
 generate_peer_id <- function() base64enc(random(16L, convert = FALSE))
 
-#' Null-coalescing operator
-#'
-#' @param x Value to test.
-#' @param y Default value if x is NULL.
-#'
-#' @return x if not NULL, otherwise y.
-#'
-#' @noRd
-`%||%` <- function(x, y) if (is.null(x)) y else x
-
 #' Close a WebSocket connection
 #'
 #' Closes a WebSocket connection by ID.
