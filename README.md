@@ -2,13 +2,13 @@
 
 <!-- badges: start -->
 
-[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental) [![R-CMD-check](https://github.com/shikokuchuo/autosync/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/shikokuchuo/autosync/actions/workflows/R-CMD-check.yaml)
-[![Codecov test coverage](https://codecov.io/gh/shikokuchuo/autosync/graph/badge.svg)](https://app.codecov.io/gh/shikokuchuo/autosync)
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental) [![R-CMD-check](https://github.com/posit-dev/autosync/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/posit-dev/autosync/actions/workflows/R-CMD-check.yaml)
+[![Codecov test coverage](https://codecov.io/gh/posit-dev/autosync/graph/badge.svg)](https://app.codecov.io/gh/posit-dev/autosync)
 <!-- badges: end -->
 
 R sync server and client for [Automerge](https://automerge.org/) CRDT documents. Implements the `automerge-repo` WebSocket protocol, enabling R to serve as a synchronization hub for Automerge clients in R, JavaScript, Rust, and other languages, and to act as a client that fetches, edits, and synchronizes documents hosted on remote servers.
 
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/shikokuchuo/autosync)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/posit-dev/autosync)
 
 ### Features
 
@@ -29,7 +29,7 @@ install.packages("autosync")
 Or the development version from GitHub:
 
 ``` r
-pak::pak("shikokuchuo/autosync")
+pak::pak("posit-dev/autosync")
 ```
 
 ## Server

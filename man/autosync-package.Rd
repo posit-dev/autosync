@@ -58,9 +58,9 @@ server$close()
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://shikokuchuo.net/autosync/}
-  \item \url{https://github.com/shikokuchuo/autosync}
-  \item Report bugs at \url{https://github.com/shikokuchuo/autosync/issues}
+  \item \url{https://posit-dev.github.io/autosync/}
+  \item \url{https://github.com/posit-dev/autosync}
+  \item Report bugs at \url{https://github.com/posit-dev/autosync/issues}
 }
 
 }

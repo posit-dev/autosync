@@ -29,7 +29,7 @@ devtools::install()
 
 ## Installation
 
-Install with: `pak::pak("shikokuchuo/autosync")`
+Install with: `pak::pak("posit-dev/autosync")`
 
 ## Architecture
 

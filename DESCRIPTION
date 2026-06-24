@@ -15,9 +15,9 @@ Description: A WebSocket-based implementation of the 'automerge-repo'
     for fetching, editing, and synchronizing documents hosted on remote
     servers.
 License: MIT + file LICENSE
-URL: https://shikokuchuo.net/autosync/,
-    https://github.com/shikokuchuo/autosync
-BugReports: https://github.com/shikokuchuo/autosync/issues
+URL: https://posit-dev.github.io/autosync/,
+    https://github.com/posit-dev/autosync
+BugReports: https://github.com/posit-dev/autosync/issues
 Depends:
     R (>= 4.4)
 Imports:
