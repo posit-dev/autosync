@@ -129,7 +129,7 @@ auth_config(
 #> $custom_validator
 #> function (claims) 
 #> "editors" %in% claims$groups
-#> <environment: 0x55f010277348>
+#> <environment: 0x55bb2d23b960>
 #> 
 #> attr(,"class")
 #> [1] "autosync_auth_config"
