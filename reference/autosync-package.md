@@ -8,25 +8,25 @@ editing, and synchronizing documents hosted on remote servers.
 
 ## Main Functions
 
-- [`sync_server()`](http://shikokuchuo.net/autosync/reference/sync_server.md):
+- [`sync_server()`](https://posit-dev.github.io/autosync/reference/sync_server.md):
 
   Create a new sync server with `$start()` and `$close()` methods
 
 ## Document Management
 
-- [`create_document()`](http://shikokuchuo.net/autosync/reference/create_document.md):
+- [`create_document()`](https://posit-dev.github.io/autosync/reference/create_document.md):
 
   Create a new document
 
-- [`get_document()`](http://shikokuchuo.net/autosync/reference/get_document.md):
+- [`get_document()`](https://posit-dev.github.io/autosync/reference/get_document.md):
 
   Retrieve a document by ID
 
-- [`list_documents()`](http://shikokuchuo.net/autosync/reference/list_documents.md):
+- [`list_documents()`](https://posit-dev.github.io/autosync/reference/list_documents.md):
 
   List all document IDs
 
-- [`generate_document_id()`](http://shikokuchuo.net/autosync/reference/generate_document_id.md):
+- [`generate_document_id()`](https://posit-dev.github.io/autosync/reference/generate_document_id.md):
 
   Generate a new document ID
 
@@ -66,11 +66,11 @@ Messages are CBOR-encoded and include:
 
 Useful links:
 
-- <https://shikokuchuo.net/autosync/>
+- <https://posit-dev.github.io/autosync/>
 
-- <https://github.com/shikokuchuo/autosync>
+- <https://github.com/posit-dev/autosync>
 
-- Report bugs at <https://github.com/shikokuchuo/autosync/issues>
+- Report bugs at <https://github.com/posit-dev/autosync/issues>
 
 ## Author
 

@@ -6,7 +6,7 @@ holds no documents on its own; open one or more live documents over it
 with the `$open_doc()` method. Each document stays synced — receiving
 real-time updates from other peers and flushing local changes — for as
 long as the connection is open. Unlike
-[`sync_fetch()`](http://shikokuchuo.net/autosync/reference/sync_fetch.md),
+[`sync_fetch()`](https://posit-dev.github.io/autosync/reference/sync_fetch.md),
 which performs a one-off retrieval over a throwaway connection, several
 documents can share a single connection here.
 

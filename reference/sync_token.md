@@ -9,7 +9,7 @@ and the flow is run by
 [`httr2::oauth_flow_auth_code()`](https://httr2.r-lib.org/reference/req_oauth_auth_code.html):
 it opens the system browser, listens on a loopback redirect for the
 callback, and returns the ID token for use with
-[`sync_fetch()`](http://shikokuchuo.net/autosync/reference/sync_fetch.md).
+[`sync_fetch()`](https://posit-dev.github.io/autosync/reference/sync_fetch.md).
 
 ## Usage
 

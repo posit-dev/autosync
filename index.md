@@ -7,7 +7,7 @@ JavaScript, Rust, and other languages, and to act as a client that
 fetches, edits, and synchronizes documents hosted on remote servers.
 
 [![Ask
-DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/shikokuchuo/autosync)
+DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/posit-dev/autosync)
 
 ### Features
 
@@ -31,7 +31,7 @@ Or the development version from GitHub:
 
 ``` r
 
-pak::pak("shikokuchuo/autosync")
+pak::pak("posit-dev/autosync")
 ```
 
 ## Server
@@ -209,7 +209,7 @@ doc <- sync_fetch("wss://sync.automerge.org", "your-document-id", verbose = TRUE
 
 For a persistent connection that keeps documents in sync — receiving
 real-time updates from other peers and flushing local changes — use
-[`sync_client()`](http://shikokuchuo.net/autosync/reference/sync_client.md).
+[`sync_client()`](https://posit-dev.github.io/autosync/reference/sync_client.md).
 Several documents can share a single connection, each opened with
 `$open_doc()`:
 

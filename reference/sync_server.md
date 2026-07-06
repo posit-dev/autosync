@@ -9,7 +9,7 @@ protocol, compatible with JavaScript, Rust, and other Automerge clients.
 sync_server(
   port = 0L,
   host = "127.0.0.1",
-  data_dir = ".automerge",
+  data_dir = tempfile("autosync"),
   auto_create_docs = TRUE,
   storage_id = NULL,
   tls = NULL,
@@ -31,7 +31,9 @@ sync_server(
 
 - data_dir:
 
-  Directory for persistent document storage. Default ".automerge".
+  Directory for document storage. Defaults to a session-temporary
+  directory, so documents do not persist across R sessions. Supply an
+  explicit path to persist documents across sessions.
 
 - auto_create_docs:
 
@@ -53,7 +55,7 @@ sync_server(
 - auth:
 
   Optional authentication configuration created by
-  [`auth_config()`](http://shikokuchuo.net/autosync/reference/auth_config.md).
+  [`auth_config()`](https://posit-dev.github.io/autosync/reference/auth_config.md).
   When provided, clients must include a valid JWT (ID token) as a Bearer
   token in the Authorization header of the WebSocket upgrade request.
   Connections without valid credentials are rejected immediately. Note:

@@ -15,6 +15,7 @@
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Automerge Sync Server and Client">
 <meta name="description" content="A WebSocket-based implementation of the automerge-repo synchronization protocol used by sync.automerge.org. Acts as a sync server, enabling R to serve as a synchronization hub for Automerge clients in JavaScript, Rust, and other languages, and as a client for fetching, editing, and synchronizing documents hosted on remote servers.">
 <meta property="og:description" content="A WebSocket-based implementation of the automerge-repo synchronization protocol used by sync.automerge.org. Acts as a sync server, enabling R to serve as a synchronization hub for Automerge clients in JavaScript, Rust, and other languages, and as a client for fetching, editing, and synchronizing documents hosted on remote servers.">
+<script src="https://cdn.jsdelivr.net/gh/posit-dev/supported-by-posit/js/badge.min.js" data-max-height="43" data-light-bg="#666f76" data-light-fg="#f9f9f9"></script>
 </head>
 <body>
     <a href="#container" class="visually-hidden-focusable">Skip to content</a>
@@ -24,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="index.html">autosync</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.1.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,7 +41,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="search.json">
 </form></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://github.com/shikokuchuo/autosync/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/posit-dev/autosync/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul>
 </div>
 
@@ -54,7 +55,7 @@
 <!-- badges: start -->
 
 <p>R sync server and client for <a href="https://automerge.org/" class="external-link">Automerge</a> CRDT documents. Implements the <code>automerge-repo</code> WebSocket protocol, enabling R to serve as a synchronization hub for Automerge clients in R, JavaScript, Rust, and other languages, and to act as a client that fetches, edits, and synchronizes documents hosted on remote servers.</p>
-<p><a href="https://deepwiki.com/shikokuchuo/autosync" class="external-link"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a></p>
+<p><a href="https://deepwiki.com/posit-dev/autosync" class="external-link"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a></p>
 <div class="section level3">
 <h3 id="features">Features<a class="anchor" aria-label="anchor" href="#features"></a>
 </h3>
@@ -74,14 +75,14 @@
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"autosync"</span><span class="op">)</span></span></code></pre></div>
 <p>Or the development version from GitHub:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"shikokuchuo/autosync"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"posit-dev/autosync"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="server">Server<a class="anchor" aria-label="anchor" href="#server"></a>
 </h2>
 <p>Create a WebSocket sync server:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://shikokuchuo.net/autosync/" class="external-link">autosync</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://posit-dev.github.io/autosync/">autosync</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">server</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/sync_server.html">sync_server</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">server</span><span class="op">$</span><span class="fu">start</span><span class="op">(</span><span class="op">)</span></span>
@@ -255,8 +256,9 @@
   </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
-<li><a href="https://github.com/shikokuchuo/autosync/" class="external-link">Browse source code</a></li>
-<li><a href="https://github.com/shikokuchuo/autosync/issues" class="external-link">Report a bug</a></li>
+<li><a href="https://cloud.r-project.org/package=autosync" class="external-link">View on CRAN</a></li>
+<li><a href="https://github.com/posit-dev/autosync/" class="external-link">Browse source code</a></li>
+<li><a href="https://github.com/posit-dev/autosync/issues" class="external-link">Report a bug</a></li>
 </ul>
 </div>
 
@@ -287,14 +289,7 @@
 </ul>
 </div>
 
-<div class="dev-status">
-<h2 data-toc-skip>Dev status</h2>
-<ul class="list-unstyled">
-<li><a href="https://lifecycle.r-lib.org/articles/stages.html#experimental" class="external-link"><img src="https://img.shields.io/badge/lifecycle-experimental-orange.svg" alt="Lifecycle: experimental"></a></li>
-<li><a href="https://github.com/shikokuchuo/autosync/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/shikokuchuo/autosync/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></li>
-<li><a href="https://app.codecov.io/gh/shikokuchuo/autosync" class="external-link"><img src="https://codecov.io/gh/shikokuchuo/autosync/graph/badge.svg" alt="Codecov test coverage"></a></li>
-</ul>
-</div>
+
 
   </aside>
 </div>

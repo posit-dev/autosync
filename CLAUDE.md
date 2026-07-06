@@ -36,14 +36,14 @@ devtools::install()
 
 ## Installation
 
-Install with: `pak::pak("shikokuchuo/autosync")`
+Install with: `pak::pak("posit-dev/autosync")`
 
 ## Architecture
 
 ### Core Components
 
 **Server (R/server.R)**:
-[`sync_server()`](http://shikokuchuo.net/autosync/reference/sync_server.md)
+[`sync_server()`](https://posit-dev.github.io/autosync/reference/sync_server.md)
 creates a WebSocket server using nanonext’s `http_server()`. The server
 maintains state in environments for: - `documents` - Loaded Automerge
 documents keyed by document ID - `sync_states` - Per-client,
@@ -61,18 +61,18 @@ broadcast) - `broadcast_sync` - Propagates changes to all peers
 subscribed to a document
 
 **Auth (R/auth.R)**: Optional OAuth2 authentication via
-[`auth_config()`](http://shikokuchuo.net/autosync/reference/auth_config.md).
+[`auth_config()`](https://posit-dev.github.io/autosync/reference/auth_config.md).
 Validates Google OAuth2 tokens, supports email/domain allowlists and
 custom validators. TLS is mandatory when auth is enabled. Uses
 [`later::later()`](https://later.r-lib.org/reference/later.html) for
 auth timeout enforcement.
-[`sync_token()`](http://shikokuchuo.net/autosync/reference/sync_token.md)
+[`sync_token()`](https://posit-dev.github.io/autosync/reference/sync_token.md)
 obtains an ID token interactively by delegating the Authorization Code +
 PKCE flow to httr2 (`oauth_server_metadata()` for discovery,
 `oauth_flow_auth_code()` for the browser handshake and token exchange).
 
 **Client (R/client.R)**:
-[`sync_fetch()`](http://shikokuchuo.net/autosync/reference/sync_fetch.md)
+[`sync_fetch()`](https://posit-dev.github.io/autosync/reference/sync_fetch.md)
 implements the client-side protocol for fetching documents from any
 automerge-repo server.
 
