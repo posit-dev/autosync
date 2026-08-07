@@ -1,35 +1,23 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for AI coding agents working **on** the autosync package. autosync is a WebSocket sync server for Automerge CRDT documents, implementing the `automerge-repo` protocol — R serves as a synchronization hub for Automerge clients in R, JavaScript, Rust, and other languages.
 
-## Project Overview
+Claude Code users: add `.claude/CLAUDE.md` containing `@../AGENTS.md` to import this file (`.claude/` is gitignored).
 
-autosync is an R package that implements a WebSocket sync server for Automerge CRDT documents. It implements the `automerge-repo` protocol, enabling R to serve as a synchronization hub for Automerge clients in R, JavaScript, Rust, and other languages.
+## Commands
 
-Interactive project browsing and live editing (`project_open()`, `project_app()`, `project_edit()`) live in the sibling `shinysync` package (`../shinysync`), which depends on autosync; autosync itself has no `shiny`/`bslib` dependency.
-
-## Development Commands
-
-```bash
-# Run all tests
-devtools::test()
-
-# Run a single test file
-testthat::test_file("tests/testthat/test-server.R")
-
-# Check package (R CMD check)
-devtools::check()
-
-# Build documentation
-devtools::document()
-
-# Install the package locally
-devtools::install()
+```r
+devtools::test()          # run the full testthat suite
+devtools::document()      # roxygen2 -> man/, NAMESPACE
+devtools::check()         # R CMD check
+devtools::install()       # install locally
 ```
 
-## Installation
+Single test file: `testthat::test_file("tests/testthat/test-server.R")`.
 
-Install with: `pak::pak("posit-dev/autosync")`
+## Related packages
+
+Interactive project browsing and live editing (`project_open()`, `project_app()`, `project_edit()`) live in the sibling `shinysync` package (`../shinysync`), which depends on autosync; autosync itself has no `shiny`/`bslib` dependency.
 
 ## Architecture
 
@@ -63,6 +51,8 @@ Install with: `pak::pak("posit-dev/autosync")`
 
 ### Protocol Details
 
+The full protocol specification is at `dev/RFC-automerge-repo-sync-protocol.md` — consult it before changing message handling.
+
 Messages are CBOR-encoded binary frames. Key message types:
 - `join`/`peer` - Connection handshake with peer IDs and metadata
 - `request`/`sync` - Document sync with Automerge sync state data
@@ -86,3 +76,8 @@ Tests use port 0 (OS-assigned) by default, retrieving the actual URL via `server
 - **Auth tests** use `local_mocked_bindings()` to mock Google token validation and snapshot tests for error messages
 - **Integration tests** use `skip_on_cran()` for network-dependent scenarios
 - **Cleanup**: Tests use `on.exit()` consistently and `tempfile()` for isolated storage directories
+
+## Packaging notes
+
+- roxygen2 with markdown; `NAMESPACE` is generated — never hand-edit.
+- `AGENTS.md`, `.claude/`, and `.posit/` are in `.Rbuildignore` and don't ship to CRAN.
