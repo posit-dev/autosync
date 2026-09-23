@@ -17,5 +17,5 @@ Character string (Base58Check encoded).
 
 ``` r
 generate_document_id()
-#> [1] "2XMsfx7ZW2CXmcnbbFHZncpsu9Am"
+#> [1] "4KcDzdKG5YTAsDgkvRD6xdcMWZR6"
 ```
