@@ -1,7 +1,7 @@
 Type: Package
 Package: autosync
 Title: 'Automerge' Sync Server and Client
-Version: 0.1.0.9000
+Version: 0.2.0
 Authors@R: c(
     person("Charlie", "Gao", , "charlie.gao@posit.co", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-0750-061X")),
@@ -33,8 +33,6 @@ Suggests:
     shiny,
     shinyreact (>= 0.1.0),
     testthat (>= 3.0.0)
-Remotes:
-    posit-dev/shinyreact
 Config/Needs/website: tidyverse/tidytemplate
 Config/roxygen2/markdown: TRUE
 Config/roxygen2/version: 8.1.0
