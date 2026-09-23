@@ -21,6 +21,17 @@ devtools::install()       # install locally
 
 Single test file: `testthat::test_file("tests/testthat/test-server.R")`.
 
+``` bash
+# Rebuild the React frontend bundle (after editing anything under srcjs/)
+npm --prefix srcjs ci      # first time / lockfile changes
+npm --prefix srcjs run build   # -> inst/www/amsync.{js,css}
+```
+
+`shinyreact` (Suggests; only for the interactive
+[`sync_app()`](https://posit-dev.github.io/autosync/dev/reference/sync_app.md)
+/ `$edit()` UI) is installed from posit-dev/shinyreact (see `Remotes` in
+DESCRIPTION).
+
 ## Related packages
 
 Interactive project browsing and live editing (`project_open()`,
@@ -65,6 +76,26 @@ PKCE flow to httr2 (`oauth_server_metadata()` for discovery,
 [`sync_fetch()`](https://posit-dev.github.io/autosync/dev/reference/sync_fetch.md)
 implements the client-side protocol for fetching documents from any
 automerge-repo server.
+[`sync_client()`](https://posit-dev.github.io/autosync/dev/reference/sync_client.md)
+opens a persistent connection whose `$open_doc()` returns `autosync_doc`
+handles sharing one socket; a handle’s `$edit()` opens a live editor.
+
+**Project (R/project.R)**:
+[`sync_project()`](https://posit-dev.github.io/autosync/dev/reference/sync_project.md)
+browses a project document’s `files` map (path -\> file doc ID) over a
+single connection, opening files on demand.
+
+**Interactive UI (R/app.R, R/edit.R)**:
+[`sync_app()`](https://posit-dev.github.io/autosync/dev/reference/sync_app.md)
+is a single-window gadget (connect / browse / edit) and `$edit()` is the
+standalone live editor. Both render a **React frontend via shinyreact**
+(not bslib) and keep R as the sole owner of the Automerge documents —
+the browser is pure UI. `install_editor_sync()` (edit.R) wires the
+bidirectional editor\<-\>document sync: an outgoing observer reads
+`input$content` and writes the minimal diff into the live doc; an
+incoming poll reflects remote changes back via a pluggable
+`set_editor()` callback (which bumps the `editor_doc` reactive_output
+revision the React CodeMirror editor watches).
 
 **Storage (R/storage.R)**: Persistence layer using `.automerge` files in
 a configurable data directory.
@@ -105,6 +136,36 @@ Base64-encoded.
 - `nanonext` - WebSocket server and async I/O
 - `secretbase` - CBOR encoding (cborenc/cbordec) and Base58/Base64
 - `later` - Event loop integration (run_now for async recv)
+
+### JS frontend (`srcjs/` -\> `inst/www/`)
+
+The
+[`sync_app()`](https://posit-dev.github.io/autosync/dev/reference/sync_app.md)
+/ `$edit()` UI is a React app built with Vite.
+
+- **Source**: `srcjs/src/` (TypeScript/TSX). `index.tsx` mounts `<App/>`
+  into the `#root` div it appends to `<body>` itself (`page_react()`
+  serves a bare page with no mount container). `App.tsx` routes on
+  `output$view`. Components: `ConnectScreen`, `BrowseScreen`, `FileTree`
+  (the `@pierre/trees` / trees.software file tree), `Editor` (CodeMirror
+  6), `Toast` (notifications via `send_message`). `shiny.ts` is a typed
+  facade over the global `window.shinyreact` hooks; `languages.ts` maps
+  file extensions to CodeMirror language modes.
+- **Build**: `npm --prefix srcjs run build` emits a self-contained IIFE
+  to `inst/www/amsync.js` + `amsync.css`. React/ReactDOM are
+  **externalized** to `window.shinyreact.{React,ReactDOM}`
+  (vite.config.ts) so the bundle shares shinyreact’s single React 19
+  instance — never bundle a second React (it breaks hooks).
+  `@pierre/trees` and CodeMirror are bundled in.
+- **Shipping**: the built `inst/www/*` is committed so the installed
+  package needs no Node; `srcjs/` is `.Rbuildignore`d. Rebuild and
+  commit after editing any `srcjs/` source.
+- **R\<-\>JS contract**: R reads `input$*` (url, proj_id,
+  client_id/secret/issuer, authenticate, connect, file, content,
+  refresh, disconnect, exit, close) and publishes `reactive_output`s
+  (`view`, `init`, `authed`, `paths`, `selected`, `editor_doc`). `paths`
+  is emitted via [`as.list()`](https://rdrr.io/r/base/list.html) so a
+  length-1 vector still serialises as a JSON array.
 
 ## Testing
 

@@ -44,6 +44,10 @@
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">check</span><span class="op">(</span><span class="op">)</span>         <span class="co"># R CMD check</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="op">)</span>       <span class="co"># install locally</span></span></code></pre></div>
 <p>Single test file: <code>testthat::test_file("tests/testthat/test-server.R")</code>.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="co"># Rebuild the React frontend bundle (after editing anything under srcjs/)</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="ex">npm</span> <span class="at">--prefix</span> srcjs ci      <span class="co"># first time / lockfile changes</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="ex">npm</span> <span class="at">--prefix</span> srcjs run build   <span class="co"># -&gt; inst/www/amsync.{js,css}</span></span></code></pre></div>
+<p><code>shinyreact</code> (Suggests; only for the interactive <code><a href="reference/sync_app.html">sync_app()</a></code> / <code>$edit()</code> UI) is installed from posit-dev/shinyreact (see <code>Remotes</code> in DESCRIPTION).</p>
 </div>
 <div class="section level2">
 <h2 id="related-packages">Related packages<a class="anchor" aria-label="anchor" href="#related-packages"></a></h2>
@@ -56,7 +60,9 @@
 <p><strong>Server (R/server.R)</strong>: <code><a href="reference/sync_server.html">sync_server()</a></code> creates a WebSocket server using nanonext’s <code>http_server()</code>. The server maintains state in environments for: - <code>documents</code> - Loaded Automerge documents keyed by document ID - <code>sync_states</code> - Per-client, per-document sync states (nested: <code>sync_states[[client_id]][[doc_id]]</code>) - <code>connections</code> - WebSocket connection objects keyed by both temp ID and client ID - <code>doc_peers</code> - Document-to-peer mapping for broadcasting</p>
 <p><strong>Handlers (R/handlers.R)</strong>: Message routing via <code>handle_message()</code> which dispatches to type-specific handlers: - <code>handle_join</code> - Protocol handshake, validates version “1”, authentication - <code>handle_sync</code> - Document synchronization using Automerge sync protocol - <code>handle_ephemeral</code> - Transient message forwarding (point-to-point or broadcast) - <code>broadcast_sync</code> - Propagates changes to all peers subscribed to a document</p>
 <p><strong>Auth (R/auth.R)</strong>: Optional OAuth2 authentication via <code><a href="reference/auth_config.html">auth_config()</a></code>. Validates Google OAuth2 tokens, supports email/domain allowlists and custom validators. TLS is mandatory when auth is enabled. Uses <code><a href="https://later.r-lib.org/reference/later.html" class="external-link">later::later()</a></code> for auth timeout enforcement. <code><a href="reference/sync_token.html">sync_token()</a></code> obtains an ID token interactively by delegating the Authorization Code + PKCE flow to httr2 (<code>oauth_server_metadata()</code> for discovery, <code>oauth_flow_auth_code()</code> for the browser handshake and token exchange).</p>
-<p><strong>Client (R/client.R)</strong>: <code><a href="reference/sync_fetch.html">sync_fetch()</a></code> implements the client-side protocol for fetching documents from any automerge-repo server.</p>
+<p><strong>Client (R/client.R)</strong>: <code><a href="reference/sync_fetch.html">sync_fetch()</a></code> implements the client-side protocol for fetching documents from any automerge-repo server. <code><a href="reference/sync_client.html">sync_client()</a></code> opens a persistent connection whose <code>$open_doc()</code> returns <code>autosync_doc</code> handles sharing one socket; a handle’s <code>$edit()</code> opens a live editor.</p>
+<p><strong>Project (R/project.R)</strong>: <code><a href="reference/sync_project.html">sync_project()</a></code> browses a project document’s <code>files</code> map (path -&gt; file doc ID) over a single connection, opening files on demand.</p>
+<p><strong>Interactive UI (R/app.R, R/edit.R)</strong>: <code><a href="reference/sync_app.html">sync_app()</a></code> is a single-window gadget (connect / browse / edit) and <code>$edit()</code> is the standalone live editor. Both render a <strong>React frontend via shinyreact</strong> (not bslib) and keep R as the sole owner of the Automerge documents — the browser is pure UI. <code>install_editor_sync()</code> (edit.R) wires the bidirectional editor&lt;-&gt;document sync: an outgoing observer reads <code>input$content</code> and writes the minimal diff into the live doc; an incoming poll reflects remote changes back via a pluggable <code>set_editor()</code> callback (which bumps the <code>editor_doc</code> reactive_output revision the React CodeMirror editor watches).</p>
 <p><strong>Storage (R/storage.R)</strong>: Persistence layer using <code>.automerge</code> files in a configurable data directory.</p>
 </div>
 <div class="section level3">
@@ -81,6 +87,18 @@
 <code>secretbase</code> - CBOR encoding (cborenc/cbordec) and Base58/Base64</li>
 <li>
 <code>later</code> - Event loop integration (run_now for async recv)</li>
+</ul></div>
+<div class="section level3">
+<h3 id="js-frontend-srcjs---instwww">JS frontend (<code>srcjs/</code> -&gt; <code>inst/www/</code>)<a class="anchor" aria-label="anchor" href="#js-frontend-srcjs---instwww"></a></h3>
+<p>The <code><a href="reference/sync_app.html">sync_app()</a></code> / <code>$edit()</code> UI is a React app built with Vite.</p>
+<ul><li>
+<strong>Source</strong>: <code>srcjs/src/</code> (TypeScript/TSX). <code>index.tsx</code> mounts <code>&lt;App/&gt;</code> into the <code>#root</code> div it appends to <code>&lt;body&gt;</code> itself (<code>page_react()</code> serves a bare page with no mount container). <code>App.tsx</code> routes on <code>output$view</code>. Components: <code>ConnectScreen</code>, <code>BrowseScreen</code>, <code>FileTree</code> (the <code>@pierre/trees</code> / trees.software file tree), <code>Editor</code> (CodeMirror 6), <code>Toast</code> (notifications via <code>send_message</code>). <code>shiny.ts</code> is a typed facade over the global <code>window.shinyreact</code> hooks; <code>languages.ts</code> maps file extensions to CodeMirror language modes.</li>
+<li>
+<strong>Build</strong>: <code>npm --prefix srcjs run build</code> emits a self-contained IIFE to <code>inst/www/amsync.js</code> + <code>amsync.css</code>. React/ReactDOM are <strong>externalized</strong> to <code>window.shinyreact.{React,ReactDOM}</code> (vite.config.ts) so the bundle shares shinyreact’s single React 19 instance — never bundle a second React (it breaks hooks). <code>@pierre/trees</code> and CodeMirror are bundled in.</li>
+<li>
+<strong>Shipping</strong>: the built <code>inst/www/*</code> is committed so the installed package needs no Node; <code>srcjs/</code> is <code>.Rbuildignore</code>d. Rebuild and commit after editing any <code>srcjs/</code> source.</li>
+<li>
+<strong>R&lt;-&gt;JS contract</strong>: R reads <code>input$*</code> (url, proj_id, client_id/secret/issuer, authenticate, connect, file, content, refresh, disconnect, exit, close) and publishes <code>reactive_output</code>s (<code>view</code>, <code>init</code>, <code>authed</code>, <code>paths</code>, <code>selected</code>, <code>editor_doc</code>). <code>paths</code> is emitted via <code><a href="https://rdrr.io/r/base/list.html" class="external-link">as.list()</a></code> so a length-1 vector still serialises as a JSON array.</li>
 </ul></div>
 </div>
 <div class="section level2">

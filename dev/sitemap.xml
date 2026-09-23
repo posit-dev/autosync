@@ -17,8 +17,10 @@
 <url><loc>https://posit-dev.github.io/autosync/dev/reference/list_documents.html</loc></url>
 <url><loc>https://posit-dev.github.io/autosync/dev/reference/oidc_issuer.html</loc></url>
 <url><loc>https://posit-dev.github.io/autosync/dev/reference/print.autosync_server.html</loc></url>
+<url><loc>https://posit-dev.github.io/autosync/dev/reference/sync_app.html</loc></url>
 <url><loc>https://posit-dev.github.io/autosync/dev/reference/sync_client.html</loc></url>
 <url><loc>https://posit-dev.github.io/autosync/dev/reference/sync_fetch.html</loc></url>
+<url><loc>https://posit-dev.github.io/autosync/dev/reference/sync_project.html</loc></url>
 <url><loc>https://posit-dev.github.io/autosync/dev/reference/sync_server.html</loc></url>
 <url><loc>https://posit-dev.github.io/autosync/dev/reference/sync_token.html</loc></url>
 <url><loc>https://posit-dev.github.io/autosync/dev/reference/validate_token.html</loc></url>

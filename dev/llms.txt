@@ -263,10 +263,14 @@ doc_id <- generate_document_id()
   : Get a document from the server
 - [`list_documents()`](https://posit-dev.github.io/autosync/dev/reference/list_documents.md)
   : List all document IDs
+- [`sync_app()`](https://posit-dev.github.io/autosync/dev/reference/sync_app.md)
+  : Launch the autosync browser app
 - [`sync_client()`](https://posit-dev.github.io/autosync/dev/reference/sync_client.md)
   : Open a persistent sync connection
 - [`sync_fetch()`](https://posit-dev.github.io/autosync/dev/reference/sync_fetch.md)
   : Fetch a document from a sync server
+- [`sync_project()`](https://posit-dev.github.io/autosync/dev/reference/sync_project.md)
+  : Open files from a project document
 - [`sync_server()`](https://posit-dev.github.io/autosync/dev/reference/sync_server.md)
   : Create an Automerge sync server
 - [`sync_token()`](https://posit-dev.github.io/autosync/dev/reference/sync_token.md)
