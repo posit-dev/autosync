@@ -86,7 +86,8 @@ Document IDs are Base58Check-encoded 16-byte random values. Peer IDs are Base64-
 The `sync_app()` / `$edit()` UI is a React app built with Vite.
 
 - **Source**: `srcjs/src/` (TypeScript/TSX). `index.tsx` mounts `<App/>` into the
-  `#root` div that `shinyreact::page_react()` provides. `App.tsx` routes on
+  `#root` div it appends to `<body>` itself (`page_react()` serves a bare
+  page with no mount container). `App.tsx` routes on
   `output$view`. Components: `ConnectScreen`, `BrowseScreen`, `FileTree` (the
   `@pierre/trees` / trees.software file tree), `Editor` (CodeMirror 6), `Toast`
   (notifications via `send_message`). `shiny.ts` is a typed facade over the
