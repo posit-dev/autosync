@@ -15,15 +15,12 @@ sync_app(
 )
 }
 \arguments{
-\item{server}{Initial sync-server URL to prefill in the connect form.
-Default \code{""}.}
+\item{server}{Sync-server URL to prefill in the connect form. Default \code{""}.}
 
-\item{proj_id}{Initial project document ID to prefill. Default \code{""}.}
+\item{proj_id}{Project document ID to prefill. Default \code{""}.}
 
-\item{token}{(optional) A JWT obtained earlier from \code{\link[=sync_token]{sync_token()}}. When
-supplied, the app starts already signed in; you can still re-authenticate
-from the form. Default \code{NULL} (sign in from the form, or connect with no
-token).}
+\item{token}{(optional) A JWT from an earlier \code{\link[=sync_token]{sync_token()}} call. When
+supplied, the app starts signed in. Default \code{NULL}.}
 
 \item{tls}{(optional) for secure wss:// connections to servers with
 self-signed or custom CA certificates, a TLS configuration object
@@ -41,33 +38,31 @@ through to the live editor. Default 300.}
 Invisibly \code{NULL}, when the app window is closed.
 }
 \description{
-Opens a single Shiny app that carries the whole workflow from start to finish
-without any other R commands. It has two screens served in one window:
+\code{sync_app()} runs one Shiny app for the whole workflow. It has two screens:
 }
 \details{
 \itemize{
-\item \strong{Connect} -- enter a sync-server URL and a project document ID, and
-optionally authenticate. When an OIDC client ID is available, connecting
-runs the same OIDC browser flow as \code{\link[=sync_token]{sync_token()}} first; client ID,
-secret, and issuer can be set under \strong{Advanced}. Blank fields fall back
-to the \code{OIDC_CLIENT_ID}, \code{OIDC_CLIENT_SECRET}, and \code{OIDC_ISSUER}
-environment variables — the form shows that the first two are set without
-revealing their values. Passing a \code{token} obtained earlier from
-\code{\link[=sync_token]{sync_token()}} starts the app already signed in, skipping that step.
-Leaving the sign-in untouched connects without a token, for open servers.
-\item \strong{Browse & edit} -- once connected, the project's file tree appears in a
-sidebar; selecting a file opens its document in a live CodeMirror editor
-that stays in sync with the server in both directions, just like a document
-handle's \verb{$edit()} method. \strong{Disconnect} returns to the connect screen;
-closing the window ends the session.
+\item \strong{Connect} -- enter a sync-server URL and a project document ID, then
+click \strong{Connect}. If an OIDC client ID is available, the app signs in
+with the same browser flow as \code{\link[=sync_token]{sync_token()}} first. Blank sign-in fields
+under \strong{Advanced} use the \code{OIDC_CLIENT_ID}, \code{OIDC_CLIENT_SECRET}, and
+\code{OIDC_ISSUER} environment variables. The form shows when the first two
+are set, but not their values. To skip sign-in, pass a \code{token} from an
+earlier \code{\link[=sync_token]{sync_token()}} call. For open servers, leave the sign-in blank
+to connect without a token.
+\item \strong{Browse & edit} -- the file tree of the project appears in a sidebar.
+Select a file to open its document in a live CodeMirror editor. The
+editor syncs with the server in both directions, like the \verb{$edit()}
+method of a document handle. \strong{Disconnect} returns to the connect
+screen. Close the window to end the session.
 }
 
-This is a front door to \code{\link[=sync_project]{sync_project()}}: it builds the same connection and
-reuses it for every file opened during the session.
+The app builds one \code{\link[=sync_project]{sync_project()}} connection and reuses it for every
+file opened during the session.
 
-The interface is a React frontend rendered with the \pkg{shinyreact} package:
-the file tree uses the \pkg{@pierre/trees} component and the editor uses
-CodeMirror 6, while R keeps owning the live Automerge documents and all
+The interface is a React frontend rendered with the \pkg{shinyreact}
+package. The file tree uses the \pkg{@pierre/trees} component, and the
+editor uses CodeMirror 6. R owns the live Automerge documents and all
 syncing. Requires the \pkg{shiny} and \pkg{shinyreact} packages and an
 interactive session.
 }
@@ -76,7 +71,7 @@ interactive session.
 # Start with empty fields and fill them in the form:
 sync_app()
 
-# Or prefill the server and project so only sign-in/Connect remain:
+# Or prefill the server and project:
 sync_app("wss://quarto-hub.com/ws", proj_id = "4F63WJPDzbHkkfKa66h1Qrr1sC5U")
 
 # Reuse a token obtained earlier, so the app starts signed in:

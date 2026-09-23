@@ -2,44 +2,39 @@
 
 #' Launch the autosync browser app
 #'
-#' Opens a single Shiny app that carries the whole workflow from start to finish
-#' without any other R commands. It has two screens served in one window:
+#' `sync_app()` runs one Shiny app for the whole workflow. It has two screens:
 #'
-#' * **Connect** -- enter a sync-server URL and a project document ID, and
-#'   optionally authenticate. When an OIDC client ID is available, connecting
-#'   runs the same OIDC browser flow as [sync_token()] first; client ID,
-#'   secret, and issuer can be set under **Advanced**. Blank fields fall back
-#'   to the `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, and `OIDC_ISSUER`
-#'   environment variables — the form shows that the first two are set without
-#'   revealing their values. Passing a `token` obtained earlier from
-#'   [sync_token()] starts the app already signed in, skipping that step.
-#'   Leaving the sign-in untouched connects without a token, for open servers.
-#' * **Browse & edit** -- once connected, the project's file tree appears in a
-#'   sidebar; selecting a file opens its document in a live CodeMirror editor
-#'   that stays in sync with the server in both directions, just like a document
-#'   handle's `$edit()` method. **Disconnect** returns to the connect screen;
-#'   closing the window ends the session.
+#' * **Connect** -- enter a sync-server URL and a project document ID, then
+#'   click **Connect**. If an OIDC client ID is available, the app signs in
+#'   with the same browser flow as [sync_token()] first. Blank sign-in fields
+#'   under **Advanced** use the `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, and
+#'   `OIDC_ISSUER` environment variables. The form shows when the first two
+#'   are set, but not their values. To skip sign-in, pass a `token` from an
+#'   earlier [sync_token()] call. For open servers, leave the sign-in blank
+#'   to connect without a token.
+#' * **Browse & edit** -- the file tree of the project appears in a sidebar.
+#'   Select a file to open its document in a live CodeMirror editor. The
+#'   editor syncs with the server in both directions, like the `$edit()`
+#'   method of a document handle. **Disconnect** returns to the connect
+#'   screen. Close the window to end the session.
 #'
-#' This is a front door to [sync_project()]: it builds the same connection and
-#' reuses it for every file opened during the session.
+#' The app builds one [sync_project()] connection and reuses it for every
+#' file opened during the session.
 #'
 #' @inheritParams sync_project
-#' @param server Initial sync-server URL to prefill in the connect form.
-#'   Default `""`.
-#' @param proj_id Initial project document ID to prefill. Default `""`.
-#' @param token (optional) A JWT obtained earlier from [sync_token()]. When
-#'   supplied, the app starts already signed in; you can still re-authenticate
-#'   from the form. Default `NULL` (sign in from the form, or connect with no
-#'   token).
+#' @param server Sync-server URL to prefill in the connect form. Default `""`.
+#' @param proj_id Project document ID to prefill. Default `""`.
+#' @param token (optional) A JWT from an earlier [sync_token()] call. When
+#'   supplied, the app starts signed in. Default `NULL`.
 #' @param debounce Milliseconds to debounce outgoing editor changes, passed
 #'   through to the live editor. Default 300.
 #'
 #' @return Invisibly `NULL`, when the app window is closed.
 #'
 #' @details
-#' The interface is a React frontend rendered with the \pkg{shinyreact} package:
-#' the file tree uses the \pkg{@pierre/trees} component and the editor uses
-#' CodeMirror 6, while R keeps owning the live Automerge documents and all
+#' The interface is a React frontend rendered with the \pkg{shinyreact}
+#' package. The file tree uses the \pkg{@pierre/trees} component, and the
+#' editor uses CodeMirror 6. R owns the live Automerge documents and all
 #' syncing. Requires the \pkg{shiny} and \pkg{shinyreact} packages and an
 #' interactive session.
 #'
@@ -47,7 +42,7 @@
 #' # Start with empty fields and fill them in the form:
 #' sync_app()
 #'
-#' # Or prefill the server and project so only sign-in/Connect remain:
+#' # Or prefill the server and project:
 #' sync_app("wss://quarto-hub.com/ws", proj_id = "4F63WJPDzbHkkfKa66h1Qrr1sC5U")
 #'
 #' # Reuse a token obtained earlier, so the app starts signed in:
