@@ -47,13 +47,14 @@ without any other R commands. It has two screens served in one window:
 \details{
 \itemize{
 \item \strong{Connect} -- enter a sync-server URL and a project document ID, and
-optionally authenticate. The \strong{Authenticate} button runs the same OIDC
-browser flow as \code{\link[=sync_token]{sync_token()}}; client ID, secret, and issuer can be set
-under \strong{Advanced} (prefilled from the \code{OIDC_CLIENT_ID},
-\code{OIDC_CLIENT_SECRET}, and \code{OIDC_ISSUER} environment variables). Passing a
-\code{token} obtained earlier from \code{\link[=sync_token]{sync_token()}} starts the app already
-signed in, skipping that step. Leaving the sign-in untouched connects
-without a token, for open servers.
+optionally authenticate. When an OIDC client ID is available, connecting
+runs the same OIDC browser flow as \code{\link[=sync_token]{sync_token()}} first; client ID,
+secret, and issuer can be set under \strong{Advanced}. Blank fields fall back
+to the \code{OIDC_CLIENT_ID}, \code{OIDC_CLIENT_SECRET}, and \code{OIDC_ISSUER}
+environment variables — the form shows that the first two are set without
+revealing their values. Passing a \code{token} obtained earlier from
+\code{\link[=sync_token]{sync_token()}} starts the app already signed in, skipping that step.
+Leaving the sign-in untouched connects without a token, for open servers.
 \item \strong{Browse & edit} -- once connected, the project's file tree appears in a
 sidebar; selecting a file opens its document in a live CodeMirror editor
 that stays in sync with the server in both directions, just like a document

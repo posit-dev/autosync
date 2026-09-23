@@ -5,7 +5,10 @@ test_that("sync_app errors in a non-interactive session", {
 
 test_that("sync_app errors when shiny or shinyreact is missing", {
   local_mocked_bindings(is_interactive = function() TRUE)
-  local_mocked_bindings(requireNamespace = function(...) FALSE, .package = "base")
+  local_mocked_bindings(
+    requireNamespace = function(...) FALSE,
+    .package = "base"
+  )
   expect_error(sync_app(), "requires the 'shiny' and 'shinyreact' packages")
 })
 
@@ -70,11 +73,25 @@ test_that("the app exposes the prefilled server URL and project to the client", 
   # Regression: the `server` argument must not be shadowed by the app's server
   # function. output$init reads `server`/`proj_id` and would error ("cannot
   # coerce type 'closure'") if `server` resolved to the server function.
-  app <- build_sync_app("wss://x/ws", "DOC123", NULL, NULL, 5000L, "files", 300L)
+  local_oidc_env("env-cid", "env-sec")
+  app <- build_sync_app(
+    "wss://x/ws",
+    "DOC123",
+    NULL,
+    NULL,
+    5000L,
+    "files",
+    300L
+  )
   shiny::testServer(app, {
     init <- output$init
     expect_equal(init$server, "wss://x/ws")
     expect_equal(init$proj_id, "DOC123")
+    # Env-configured credentials are exposed as flags only, never values.
+    expect_true(init$client_id_env)
+    expect_true(init$client_secret_env)
+    expect_null(init[["client_id"]])
+    expect_null(init[["client_secret"]])
   })
 })
 
@@ -93,6 +110,8 @@ test_that("the app connects, browses, and edits over a live server", {
   skip_on_cran()
   skip_if_not_installed("shiny")
   skip_if_not_installed("shinyreact")
+
+  local_oidc_env()
   drain_later()
 
   data_dir <- tempfile()
@@ -192,10 +211,37 @@ test_that("Connect auto-authenticates when an OIDC client ID is provided", {
   })
 })
 
+test_that("Connect falls back to the OIDC env vars when the fields are blank", {
+  skip_if_not_installed("shiny")
+  skip_if_not_installed("shinyreact")
+
+  local_oidc_env("env-cid", "env-sec")
+  seen <- NULL
+  local_mocked_bindings(sync_token = function(client_id, client_secret, ...) {
+    seen <<- list(client_id = client_id, client_secret = client_secret)
+    "fresh.jwt"
+  })
+  local_mocked_bindings(
+    sync_project = function(url, proj_id, token = NULL, ...) {
+      list(paths = function() character(0))
+    }
+  )
+  app <- build_sync_app("", "", NULL, NULL, 5000L, "files", 300L)
+  shiny::testServer(app, {
+    session$setInputs(url = "wss://x/ws", proj_id = "DOC123") # fields blank
+    session$setInputs(connect = 1)
+    expect_equal(seen$client_id, "env-cid")
+    expect_equal(seen$client_secret, "env-sec")
+    expect_true(rv$authed)
+    expect_equal(rv$view, "browse")
+  })
+})
+
 test_that("Connect connects tokenless when no OIDC client ID is given", {
   skip_if_not_installed("shiny")
   skip_if_not_installed("shinyreact")
 
+  local_oidc_env()
   token_called <- FALSE
   used_token <- "unset"
   local_mocked_bindings(sync_token = function(...) {
@@ -227,7 +273,12 @@ test_that("a failed auto-authentication stays on the connect screen", {
   app <- build_sync_app("", "", NULL, NULL, 5000L, "files", 300L)
   shiny::testServer(app, {
     # Blank issuer falls back to oidc_issuer() (the other branch).
-    session$setInputs(url = "wss://x/ws", proj_id = "DOC123", client_id = "cid", issuer = "")
+    session$setInputs(
+      url = "wss://x/ws",
+      proj_id = "DOC123",
+      client_id = "cid",
+      issuer = ""
+    )
     session$setInputs(connect = 1)
     expect_false(rv$authed)
     expect_null(st$proj)
@@ -252,6 +303,8 @@ test_that("a persistently failing Connect stays on the connect screen", {
   skip_if_not_installed("shiny")
   skip_if_not_installed("shinyreact")
 
+  local_oidc_env()
+
   # Stub the inter-retry pause so the retries don't sleep through the test.
   tries <- 0L
   local_mocked_bindings(retry_pause = function() invisible())
@@ -273,12 +326,16 @@ test_that("Connect retries a transient connection failure then succeeds", {
   skip_if_not_installed("shiny")
   skip_if_not_installed("shinyreact")
 
+  local_oidc_env()
+
   local_mocked_bindings(retry_pause = function() invisible())
   attempt <- 0L
   local_mocked_bindings(
     sync_project = function(url, proj_id, token = NULL, ...) {
       attempt <<- attempt + 1L
-      if (attempt < 3L) stop("transient")
+      if (attempt < 3L) {
+        stop("transient")
+      }
       list(paths = function() character(0))
     }
   )

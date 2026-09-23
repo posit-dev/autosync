@@ -7,8 +7,10 @@ import { React, useShinyEvent, useShinyInput, useShinyOutputValue } from "./shin
 interface Init {
   server: string;
   proj_id: string;
-  client_id: string;
-  client_secret: string;
+  // Provenance flags only — R never sends the env vars' values. Blank fields
+  // fall back to the environment server-side on connect.
+  client_id_env: boolean;
+  client_secret_env: boolean;
   issuer: string;
 }
 
@@ -25,17 +27,18 @@ export function ConnectScreen() {
   const connect = useShinyEvent("connect");
   const exit = useShinyEvent("exit");
 
-  // Seed the form once from the R-supplied prefill/defaults.
+  // Seed the form once from the R-supplied prefill/defaults. The OIDC client
+  // ID and secret are deliberately not seeded: R sends only whether the env
+  // vars are set (shown as placeholder text) and falls back to them when the
+  // fields are left blank.
   const seeded = React.useRef(false);
   React.useEffect(() => {
     if (!init || seeded.current) return;
     seeded.current = true;
     if (init.server) setUrl(init.server);
     if (init.proj_id) setProjId(init.proj_id);
-    if (init.client_id) setClientId(init.client_id);
-    if (init.client_secret) setClientSecret(init.client_secret);
     if (init.issuer) setIssuer(init.issuer);
-  }, [init, setUrl, setProjId, setClientId, setClientSecret, setIssuer]);
+  }, [init, setUrl, setProjId, setIssuer]);
 
   return (
     <div className="amsync-connect">
@@ -70,13 +73,19 @@ export function ConnectScreen() {
           <div className="amsync-advanced-body">
             <p className="amsync-advanced-note">
               Provide a client ID to sign in (OIDC) automatically when you
-              connect. Leave blank for open servers.
+              connect. Leave blank for open servers. Fields shown as set from
+              the environment are used when left blank.
             </p>
             <label className="amsync-field">
               <span>OIDC client ID</span>
               <input
                 type="text"
                 value={clientId}
+                placeholder={
+                  init?.client_id_env
+                    ? "Set from $OIDC_CLIENT_ID (leave blank to use)"
+                    : ""
+                }
                 onChange={(e) => setClientId(e.target.value)}
               />
             </label>
@@ -85,6 +94,11 @@ export function ConnectScreen() {
               <input
                 type="password"
                 value={clientSecret}
+                placeholder={
+                  init?.client_secret_env
+                    ? "Set from $OIDC_CLIENT_SECRET (leave blank to use)"
+                    : ""
+                }
                 onChange={(e) => setClientSecret(e.target.value)}
               />
             </label>

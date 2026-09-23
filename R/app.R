@@ -6,13 +6,14 @@
 #' without any other R commands. It has two screens served in one window:
 #'
 #' * **Connect** -- enter a sync-server URL and a project document ID, and
-#'   optionally authenticate. The **Authenticate** button runs the same OIDC
-#'   browser flow as [sync_token()]; client ID, secret, and issuer can be set
-#'   under **Advanced** (prefilled from the `OIDC_CLIENT_ID`,
-#'   `OIDC_CLIENT_SECRET`, and `OIDC_ISSUER` environment variables). Passing a
-#'   `token` obtained earlier from [sync_token()] starts the app already
-#'   signed in, skipping that step. Leaving the sign-in untouched connects
-#'   without a token, for open servers.
+#'   optionally authenticate. When an OIDC client ID is available, connecting
+#'   runs the same OIDC browser flow as [sync_token()] first; client ID,
+#'   secret, and issuer can be set under **Advanced**. Blank fields fall back
+#'   to the `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, and `OIDC_ISSUER`
+#'   environment variables — the form shows that the first two are set without
+#'   revealing their values. Passing a `token` obtained earlier from
+#'   [sync_token()] starts the app already signed in, skipping that step.
+#'   Leaving the sign-in untouched connects without a token, for open servers.
 #' * **Browse & edit** -- once connected, the project's file tree appears in a
 #'   sidebar; selecting a file opens its document in a live CodeMirror editor
 #'   that stays in sync with the server in both directions, just like a document
@@ -182,8 +183,11 @@ build_sync_app <- function(
     output$init <- shinyreact::reactive_output(list(
       server = server,
       proj_id = proj_id,
-      client_id = Sys.getenv("OIDC_CLIENT_ID"),
-      client_secret = Sys.getenv("OIDC_CLIENT_SECRET"),
+      # Flags, not values: the form shows that the env vars are set and the
+      # connect observer falls back to them server-side, so the secret never
+      # leaves the R session.
+      client_id_env = nzchar(Sys.getenv("OIDC_CLIENT_ID")),
+      client_secret_env = nzchar(Sys.getenv("OIDC_CLIENT_SECRET")),
       issuer = oidc_issuer()
     ))
 
@@ -203,13 +207,22 @@ build_sync_app <- function(
       # event loop with run_now() (reentrant-safe) while it waits for the OAuth
       # callback; the browser opening is the user's feedback.
       if (is.null(st$token)) {
+        # Blank sign-in fields fall back to the environment, so an
+        # env-configured secret never round-trips through the browser.
         client_id <- trimws(input$client_id %||% "")
+        if (!nzchar(client_id)) {
+          client_id <- Sys.getenv("OIDC_CLIENT_ID")
+        }
         if (nzchar(client_id)) {
+          client_secret <- trimws(input$client_secret %||% "")
+          if (!nzchar(client_secret)) {
+            client_secret <- Sys.getenv("OIDC_CLIENT_SECRET")
+          }
           issuer <- trimws(input$issuer %||% "")
           token <- tryCatch(
             sync_token(
               client_id = client_id,
-              client_secret = input$client_secret %||% "",
+              client_secret = client_secret,
               issuer = if (nzchar(issuer)) issuer else oidc_issuer()
             ),
             error = function(e) {
