@@ -215,7 +215,7 @@ edit_in_shiny <- function(doc, at, ext = NULL, debounce = 300L) {
 
   base <- am_text_content(navigate_to_text(doc$doc, at))
 
-  ui <- shinyreact::page_react(amsync_react_dep(), title = "amsync")
+  ui <- amsync_react_page()
 
   server <- function(input, output, session) {
     # Editor state lives in a plain environment read by the sync observers

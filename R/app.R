@@ -126,7 +126,7 @@ build_sync_app <- function(
   files_key,
   debounce
 ) {
-  ui <- shinyreact::page_react(amsync_react_dep(), title = "amsync")
+  ui <- amsync_react_page()
 
   # Named `app_server` rather than `server` so it does not shadow the `server`
   # argument (the prefill URL), which the connect screen reads when rendering.
@@ -332,22 +332,21 @@ build_sync_app <- function(
   shiny::shinyApp(ui, app_server)
 }
 
-#' HTML dependency for the autosync React frontend bundle
+#' React UI page for the autosync frontend bundle
 #'
-#' Wraps [shinyreact::page_react_dep()] over the built `inst/www/amsync.{js,css}`
-#' bundle so it loads (after the shinyreact page dependency) on any
-#' [shinyreact::page_react()] page. Versioned by the JS file's mtime, so a
-#' rebuild busts the browser cache.
+#' Points [shinyreact::page_react()] at the built `inst/www/amsync.{js,css}`
+#' bundle. Versioned by the JS file's mtime, so a rebuild busts the browser
+#' cache.
 #'
-#' @return An [htmltools::htmlDependency].
+#' @return A UI definition for [shiny::shinyApp()].
 #'
 #' @noRd
-amsync_react_dep <- function() {
-  shinyreact::page_react_dep(
+amsync_react_page <- function() {
+  shinyreact::page_react(
     src_dir = system.file("www", package = "autosync"),
     js_file = "amsync.js",
     css_file = "amsync.css",
-    name = "autosync"
+    title = "amsync"
   )
 }
 

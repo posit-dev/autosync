@@ -31,7 +31,7 @@ Imports:
 Suggests:
     openssl,
     shiny,
-    shinyreact,
+    shinyreact (>= 0.1.0),
     testthat (>= 3.0.0)
 Remotes:
     posit-dev/shinyreact
