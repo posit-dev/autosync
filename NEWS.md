@@ -1,4 +1,4 @@
-# autosync (development version)
+# autosync 0.1.1
 
 * Require nanonext >= 1.10.3.
 
