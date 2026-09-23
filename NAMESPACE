@@ -2,14 +2,17 @@
 
 S3method(print,autosync_client)
 S3method(print,autosync_doc)
+S3method(print,autosync_project)
 S3method(print,autosync_server)
 export(auth_config)
 export(create_document)
 export(generate_document_id)
 export(get_document)
 export(list_documents)
+export(sync_app)
 export(sync_client)
 export(sync_fetch)
+export(sync_project)
 export(sync_server)
 export(sync_token)
 importFrom(automerge,
@@ -24,7 +27,9 @@ importFrom(automerge,
   am_sync_encode,
   am_sync_state,
   am_sync_state_decode,
-  am_sync_state_encode
+  am_sync_state_encode,
+  am_text_content,
+  am_text_update
 )
 importFrom(httr2,
   oauth_client,
@@ -66,4 +71,5 @@ importFrom(secretbase,
   jsondec,
   jsonenc
 )
+importFrom(tools,file_ext)
 importFrom(utils,str)
