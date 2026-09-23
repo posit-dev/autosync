@@ -19,10 +19,10 @@
 #'   handle's `$edit()` method. **Disconnect** returns to the connect screen;
 #'   closing the window ends the session.
 #'
-#' This is a front door to [amsync_project()]: it builds the same connection and
+#' This is a front door to [sync_project()]: it builds the same connection and
 #' reuses it for every file opened during the session.
 #'
-#' @inheritParams amsync_project
+#' @inheritParams sync_project
 #' @param server Initial sync-server URL to prefill in the connect form.
 #'   Default `""`.
 #' @param proj_id Initial project document ID to prefill. Default `""`.
@@ -44,18 +44,18 @@
 #'
 #' @examplesIf interactive()
 #' # Start with empty fields and fill them in the form:
-#' amsync_app()
+#' sync_app()
 #'
 #' # Or prefill the server and project so only sign-in/Connect remain:
-#' amsync_app("wss://quarto-hub.com/ws", proj_id = "4F63WJPDzbHkkfKa66h1Qrr1sC5U")
+#' sync_app("wss://quarto-hub.com/ws", proj_id = "4F63WJPDzbHkkfKa66h1Qrr1sC5U")
 #'
 #' # Reuse a token obtained earlier, so the app starts signed in:
 #' token <- sync_token()
-#' amsync_app("wss://quarto-hub.com/ws", proj_id = "4F63WJPD...", token = token)
+#' sync_app("wss://quarto-hub.com/ws", proj_id = "4F63WJPD...", token = token)
 #'
 #' @importFrom automerge am_text_content
 #' @export
-amsync_app <- function(
+sync_app <- function(
   server = "",
   proj_id = "",
   token = NULL,
@@ -65,14 +65,14 @@ amsync_app <- function(
   debounce = 300L
 ) {
   if (!is_interactive()) {
-    stop("`amsync_app()` requires an interactive session")
+    stop("`sync_app()` requires an interactive session")
   }
   if (
     !requireNamespace("shiny", quietly = TRUE) ||
       !requireNamespace("shinyreact", quietly = TRUE)
   ) {
     stop(
-      "amsync_app() requires the 'shiny' and 'shinyreact' packages.\n",
+      "sync_app() requires the 'shiny' and 'shinyreact' packages.\n",
       'Install shiny with install.packages("shiny") and shinyreact with ',
       'pak::pak("posit-dev/shinyreact").'
     )
@@ -89,7 +89,7 @@ amsync_app <- function(
     )
   }
 
-  app <- build_amsync_app(
+  app <- build_sync_app(
     server,
     proj_id,
     token,
@@ -104,20 +104,20 @@ amsync_app <- function(
 
 #' Build the autosync browser Shiny app object
 #'
-#' Splits the app's UI and server out of [amsync_app()] so the same app can be
+#' Splits the app's UI and server out of [sync_app()] so the same app can be
 #' launched as a gadget there and driven by `shiny::testServer()` in tests. The
-#' parameters mirror [amsync_app()].
+#' parameters mirror [sync_app()].
 #'
 #' The UI is the React frontend (`inst/www/amsync.js`) mounted by
 #' [shinyreact::page_react()]; the server publishes the screen state, file tree,
 #' sign-in state, and open-file content as `reactive_output()`s the client
 #' reads, and reacts to the client's `input$*` events. R owns the Automerge
-#' documents throughout via [amsync_project()] and `install_editor_sync()`.
+#' documents throughout via [sync_project()] and `install_editor_sync()`.
 #'
 #' @return A [shiny::shinyApp()] object.
 #'
 #' @noRd
-build_amsync_app <- function(
+build_sync_app <- function(
   server,
   proj_id,
   token,
@@ -138,7 +138,7 @@ build_amsync_app <- function(
     # install_editor_sync() reads $doc/$at/$base/$shown from here, just as it
     # does in edit_in_shiny().
     st <- new.env(parent = emptyenv())
-    st$proj <- NULL # the amsync_project connection, once connected
+    st$proj <- NULL # the sync_project connection, once connected
     st$token <- token # JWT, pre-supplied or from the Authenticate flow
     st$doc <- NULL # the currently-open autosync_doc handle
     st$at <- "text" # path to the text object within a file document
@@ -355,14 +355,14 @@ amsync_react_dep <- function() {
 #'
 #' The first dial to a sync server (often right after signing in) can fail
 #' transiently with a protocol/permission hiccup. Retry up to `retries` times,
-#' one second apart, before giving up. Returns the connected `amsync_project`, or
+#' one second apart, before giving up. Returns the connected `sync_project`, or
 #' `NULL` after notifying the final error.
 #'
 #' @param session The Shiny session (for retry/failure notifications).
-#' @param url,proj_id,token,tls,timeout,files_key Passed to [amsync_project()].
+#' @param url,proj_id,token,tls,timeout,files_key Passed to [sync_project()].
 #' @param retries Number of extra attempts after the first. Default 5.
 #'
-#' @return An `amsync_project`, or `NULL` on persistent failure.
+#' @return An `sync_project`, or `NULL` on persistent failure.
 #'
 #' @noRd
 connect_with_retry <- function(
@@ -379,7 +379,7 @@ connect_with_retry <- function(
   attempts <- retries + 1L
   for (attempt in seq_len(attempts)) {
     proj <- tryCatch(
-      amsync_project(
+      sync_project(
         url,
         proj_id,
         token = token,

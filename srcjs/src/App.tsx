@@ -1,6 +1,6 @@
 // Top-level router. The R server drives the active screen through `output$view`
 // ("connect" | "browse" | "edit" | "closed"); "edit" is the standalone live
-// editor launched by the amsync_doc `$edit()` method.
+// editor launched by the autosync_doc `$edit()` method.
 
 import type { ReactNode } from "react";
 import { useShinyEvent, useShinyInitialized, useShinyOutputValue } from "./shiny";

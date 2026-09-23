@@ -2,7 +2,7 @@
 // owns the file list; we receive the flat `paths` vector via `output$paths` and
 // the path-first model builds the visual tree. Selecting a file row reports its
 // canonical path back through `input$file`, which round-trips exactly to
-// amsync_project()'s `$open(path)`.
+// sync_project()'s `$open(path)`.
 
 import type { CSSProperties } from "react";
 import type { FileTreeIconConfig } from "@pierre/trees";

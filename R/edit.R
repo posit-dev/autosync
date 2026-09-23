@@ -118,7 +118,7 @@ poll_doc_to_editor <- function(target, shown) {
 
 #' Wire the bidirectional editor <-> live-document sync onto a Shiny session
 #'
-#' Installs the two observers shared by `edit_in_shiny()` and [amsync_app()]'s
+#' Installs the two observers shared by `edit_in_shiny()` and [sync_app()]'s
 #' browse screen: an outgoing one that writes debounced editor changes into the
 #' live document and pushes them, and an incoming one that polls the document
 #' and reflects remote changes back into the editor. Both read the open

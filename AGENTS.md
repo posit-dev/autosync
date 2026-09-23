@@ -21,7 +21,7 @@ npm --prefix srcjs ci      # first time / lockfile changes
 npm --prefix srcjs run build   # -> inst/www/amsync.{js,css}
 ```
 
-`shinyreact` (Suggests; only for the interactive `amsync_app()` / `$edit()` UI)
+`shinyreact` (Suggests; only for the interactive `sync_app()` / `$edit()` UI)
 is installed from posit-dev/shinyreact (see `Remotes` in DESCRIPTION).
 
 ## Related packages
@@ -48,9 +48,9 @@ Interactive project browsing and live editing (`project_open()`, `project_app()`
 
 **Client (R/client.R)**: `sync_fetch()` implements the client-side protocol for fetching documents from any automerge-repo server. `sync_client()` opens a persistent connection whose `$open_doc()` returns `autosync_doc` handles sharing one socket; a handle's `$edit()` opens a live editor.
 
-**Project (R/project.R)**: `amsync_project()` browses a project document's `files` map (path -> file doc ID) over a single connection, opening files on demand.
+**Project (R/project.R)**: `sync_project()` browses a project document's `files` map (path -> file doc ID) over a single connection, opening files on demand.
 
-**Interactive UI (R/app.R, R/edit.R)**: `amsync_app()` is a single-window gadget (connect / browse / edit) and `$edit()` is the standalone live editor. Both render a **React frontend via shinyreact** (not bslib) and keep R as the sole owner of the Automerge documents — the browser is pure UI. `install_editor_sync()` (edit.R) wires the bidirectional editor<->document sync: an outgoing observer reads `input$content` and writes the minimal diff into the live doc; an incoming poll reflects remote changes back via a pluggable `set_editor()` callback (which bumps the `editor_doc` reactive_output revision the React CodeMirror editor watches).
+**Interactive UI (R/app.R, R/edit.R)**: `sync_app()` is a single-window gadget (connect / browse / edit) and `$edit()` is the standalone live editor. Both render a **React frontend via shinyreact** (not bslib) and keep R as the sole owner of the Automerge documents — the browser is pure UI. `install_editor_sync()` (edit.R) wires the bidirectional editor<->document sync: an outgoing observer reads `input$content` and writes the minimal diff into the live doc; an incoming poll reflects remote changes back via a pluggable `set_editor()` callback (which bumps the `editor_doc` reactive_output revision the React CodeMirror editor watches).
 
 **Storage (R/storage.R)**: Persistence layer using `.automerge` files in a configurable data directory.
 
@@ -83,7 +83,7 @@ Document IDs are Base58Check-encoded 16-byte random values. Peer IDs are Base64-
 
 ### JS frontend (`srcjs/` -> `inst/www/`)
 
-The `amsync_app()` / `$edit()` UI is a React app built with Vite.
+The `sync_app()` / `$edit()` UI is a React app built with Vite.
 
 - **Source**: `srcjs/src/` (TypeScript/TSX). `index.tsx` mounts `<App/>` into the
   `#root` div that `shinyreact::page_react()` provides. `App.tsx` routes on

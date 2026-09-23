@@ -1,15 +1,15 @@
-test_that("amsync_app errors in a non-interactive session", {
+test_that("sync_app errors in a non-interactive session", {
   local_mocked_bindings(is_interactive = function() FALSE)
-  expect_error(amsync_app(), "requires an interactive session")
+  expect_error(sync_app(), "requires an interactive session")
 })
 
-test_that("amsync_app errors when shiny or shinyreact is missing", {
+test_that("sync_app errors when shiny or shinyreact is missing", {
   local_mocked_bindings(is_interactive = function() TRUE)
   local_mocked_bindings(requireNamespace = function(...) FALSE, .package = "base")
-  expect_error(amsync_app(), "requires the 'shiny' and 'shinyreact' packages")
+  expect_error(sync_app(), "requires the 'shiny' and 'shinyreact' packages")
 })
 
-test_that("amsync_app builds the app and launches it as a gadget", {
+test_that("sync_app builds the app and launches it as a gadget", {
   skip_if_not_installed("shiny")
   skip_if_not_installed("shinyreact")
 
@@ -25,7 +25,7 @@ test_that("amsync_app builds the app and launches it as a gadget", {
     .package = "shiny"
   )
 
-  expect_null(amsync_app("wss://x/ws", proj_id = "DOC123"))
+  expect_null(sync_app("wss://x/ws", proj_id = "DOC123"))
   expect_s3_class(launched, "shiny.appobj")
 })
 
@@ -43,7 +43,7 @@ test_that("Exit switches to the closed screen and schedules the app to stop", {
     }
   )
 
-  app <- build_amsync_app("", "", NULL, NULL, 5000L, "files", 300L)
+  app <- build_sync_app("", "", NULL, NULL, 5000L, "files", 300L)
   shiny::testServer(app, {
     expect_equal(rv$view, "connect")
     session$setInputs(exit = 1)
@@ -56,7 +56,7 @@ test_that("a token passed to the app starts it signed in", {
   skip_if_not_installed("shiny")
   skip_if_not_installed("shinyreact")
 
-  app <- build_amsync_app("", "", "jwt.tok.en", NULL, 5000L, "files", 300L)
+  app <- build_sync_app("", "", "jwt.tok.en", NULL, 5000L, "files", 300L)
   shiny::testServer(app, {
     expect_true(rv$authed)
     expect_equal(st$token, "jwt.tok.en")
@@ -70,7 +70,7 @@ test_that("the app exposes the prefilled server URL and project to the client", 
   # Regression: the `server` argument must not be shadowed by the app's server
   # function. output$init reads `server`/`proj_id` and would error ("cannot
   # coerce type 'closure'") if `server` resolved to the server function.
-  app <- build_amsync_app("wss://x/ws", "DOC123", NULL, NULL, 5000L, "files", 300L)
+  app <- build_sync_app("wss://x/ws", "DOC123", NULL, NULL, 5000L, "files", 300L)
   shiny::testServer(app, {
     init <- output$init
     expect_equal(init$server, "wss://x/ws")
@@ -78,15 +78,15 @@ test_that("the app exposes the prefilled server URL and project to the client", 
   })
 })
 
-test_that("amsync_app rejects a malformed token", {
+test_that("sync_app rejects a malformed token", {
   skip_if_not_installed("shiny")
   skip_if_not_installed("shinyreact")
   # Token validation runs after the interactive + package checks, so mock the
   # session as interactive to reach it.
   local_mocked_bindings(is_interactive = function() TRUE)
-  expect_error(amsync_app(token = 123), "single non-empty string")
-  expect_error(amsync_app(token = c("a", "b")), "single non-empty string")
-  expect_error(amsync_app(token = ""), "single non-empty string")
+  expect_error(sync_app(token = 123), "single non-empty string")
+  expect_error(sync_app(token = c("a", "b")), "single non-empty string")
+  expect_error(sync_app(token = ""), "single non-empty string")
 })
 
 test_that("the app connects, browses, and edits over a live server", {
@@ -113,7 +113,7 @@ test_that("the app connects, browses, and edits over a live server", {
   files <- pdoc[["files"]]
   files[["/notes.md"]] <- automerge::am_text(fid)
 
-  app <- build_amsync_app(
+  app <- build_sync_app(
     server = server$url,
     proj_id = pid,
     token = NULL,
@@ -136,7 +136,7 @@ test_that("the app connects, browses, and edits over a live server", {
     session$setInputs(connect = 1)
     expect_equal(rv$view, "browse")
     expect_equal(rv$paths, "/notes.md")
-    expect_s3_class(st$proj, "amsync_project")
+    expect_s3_class(st$proj, "autosync_project")
 
     # Opening the file loads its document and pushes its content to the editor.
     session$setInputs(file = "/notes.md")
@@ -168,12 +168,12 @@ test_that("Connect auto-authenticates when an OIDC client ID is provided", {
   used_token <- NULL
   local_mocked_bindings(sync_token = function(...) "fresh.jwt")
   local_mocked_bindings(
-    amsync_project = function(url, proj_id, token = NULL, ...) {
+    sync_project = function(url, proj_id, token = NULL, ...) {
       used_token <<- token
       list(paths = function() character(0))
     }
   )
-  app <- build_amsync_app("", "", NULL, NULL, 5000L, "files", 300L)
+  app <- build_sync_app("", "", NULL, NULL, 5000L, "files", 300L)
   shiny::testServer(app, {
     expect_false(rv$authed)
     # A non-empty issuer is used as-is (exercises the issuer branch).
@@ -187,7 +187,7 @@ test_that("Connect auto-authenticates when an OIDC client ID is provided", {
     session$setInputs(connect = 1)
     expect_equal(st$token, "fresh.jwt")
     expect_true(rv$authed)
-    expect_equal(used_token, "fresh.jwt") # token forwarded to amsync_project()
+    expect_equal(used_token, "fresh.jwt") # token forwarded to sync_project()
     expect_equal(rv$view, "browse")
   })
 })
@@ -203,12 +203,12 @@ test_that("Connect connects tokenless when no OIDC client ID is given", {
     "x"
   })
   local_mocked_bindings(
-    amsync_project = function(url, proj_id, token = NULL, ...) {
+    sync_project = function(url, proj_id, token = NULL, ...) {
       used_token <<- token
       list(paths = function() character(0))
     }
   )
-  app <- build_amsync_app("", "", NULL, NULL, 5000L, "files", 300L)
+  app <- build_sync_app("", "", NULL, NULL, 5000L, "files", 300L)
   shiny::testServer(app, {
     session$setInputs(url = "wss://x/ws", proj_id = "DOC123") # no client_id
     session$setInputs(connect = 1)
@@ -224,7 +224,7 @@ test_that("a failed auto-authentication stays on the connect screen", {
   skip_if_not_installed("shinyreact")
 
   local_mocked_bindings(sync_token = function(...) stop("denied"))
-  app <- build_amsync_app("", "", NULL, NULL, 5000L, "files", 300L)
+  app <- build_sync_app("", "", NULL, NULL, 5000L, "files", 300L)
   shiny::testServer(app, {
     # Blank issuer falls back to oidc_issuer() (the other branch).
     session$setInputs(url = "wss://x/ws", proj_id = "DOC123", client_id = "cid", issuer = "")
@@ -239,7 +239,7 @@ test_that("Connect warns and stays put when the URL or project ID is blank", {
   skip_if_not_installed("shiny")
   skip_if_not_installed("shinyreact")
 
-  app <- build_amsync_app("", "", NULL, NULL, 5000L, "files", 300L)
+  app <- build_sync_app("", "", NULL, NULL, 5000L, "files", 300L)
   shiny::testServer(app, {
     session$setInputs(url = "", proj_id = "")
     session$setInputs(connect = 1)
@@ -255,11 +255,11 @@ test_that("a persistently failing Connect stays on the connect screen", {
   # Stub the inter-retry pause so the retries don't sleep through the test.
   tries <- 0L
   local_mocked_bindings(retry_pause = function() invisible())
-  local_mocked_bindings(amsync_project = function(...) {
+  local_mocked_bindings(sync_project = function(...) {
     tries <<- tries + 1L
     stop("cannot connect")
   })
-  app <- build_amsync_app("", "", NULL, NULL, 5000L, "files", 300L)
+  app <- build_sync_app("", "", NULL, NULL, 5000L, "files", 300L)
   shiny::testServer(app, {
     session$setInputs(url = "wss://x/ws", proj_id = "DOC123")
     session$setInputs(connect = 1)
@@ -276,13 +276,13 @@ test_that("Connect retries a transient connection failure then succeeds", {
   local_mocked_bindings(retry_pause = function() invisible())
   attempt <- 0L
   local_mocked_bindings(
-    amsync_project = function(url, proj_id, token = NULL, ...) {
+    sync_project = function(url, proj_id, token = NULL, ...) {
       attempt <<- attempt + 1L
       if (attempt < 3L) stop("transient")
       list(paths = function() character(0))
     }
   )
-  app <- build_amsync_app("", "", NULL, NULL, 5000L, "files", 300L)
+  app <- build_sync_app("", "", NULL, NULL, 5000L, "files", 300L)
   shiny::testServer(app, {
     session$setInputs(url = "wss://x/ws", proj_id = "DOC123")
     session$setInputs(connect = 1)
@@ -295,7 +295,7 @@ test_that("opening a file ignores a blank path and reports open errors", {
   skip_if_not_installed("shiny")
   skip_if_not_installed("shinyreact")
 
-  app <- build_amsync_app("", "", NULL, NULL, 5000L, "files", 300L)
+  app <- build_sync_app("", "", NULL, NULL, 5000L, "files", 300L)
   shiny::testServer(app, {
     # The observer is ignoreInit, so the first input change is swallowed; prime
     # it before the cases we want to observe.
@@ -317,7 +317,7 @@ test_that("Refresh re-resolves the tree and drops a vanished selection", {
   skip_if_not_installed("shiny")
   skip_if_not_installed("shinyreact")
 
-  app <- build_amsync_app("", "", NULL, NULL, 5000L, "files", 300L)
+  app <- build_sync_app("", "", NULL, NULL, 5000L, "files", 300L)
   shiny::testServer(app, {
     # No project held: refresh is a quiet no-op.
     session$setInputs(refresh = 1)

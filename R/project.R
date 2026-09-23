@@ -11,7 +11,7 @@
 #' Opening a file syncs that file's document over the **same** connection
 #' rather than dialing the server again, so a session reuses a single WebSocket
 #' throughout. Call the opened file's `$edit()` method to edit it live, or use
-#' [amsync_app()] for an interactive browser. Call `$close()` when finished to
+#' [sync_app()] for an interactive browser. Call `$close()` when finished to
 #' disconnect.
 #'
 #' @inheritParams sync_fetch
@@ -19,7 +19,7 @@
 #' @param files_key Key of the files map within the project document. Default
 #'   `"files"`.
 #'
-#' @return An environment of class `"amsync_project"` (reference semantics)
+#' @return An environment of class `"autosync_project"` (reference semantics)
 #'   with the following fields and methods:
 #'   \describe{
 #'     \item{`doc`}{The live project document, kept in sync with the server.}
@@ -36,7 +36,7 @@
 #'   }
 #'
 #' @examplesIf interactive()
-#' proj <- amsync_project("wss://quarto-hub.com/ws", proj_id, token = sync_token())
+#' proj <- sync_project("wss://quarto-hub.com/ws", proj_id, token = sync_token())
 #' proj                                   # prints the file tree
 #' doc <- proj$open("/charlie/index.qmd") # open a file over the connection
 #' doc$edit(at = "text", ext = ".qmd")    # edit it live
@@ -45,7 +45,7 @@
 #' @importFrom automerge am_keys am_text_content
 #' @importFrom tools file_ext
 #' @export
-amsync_project <- function(
+sync_project <- function(
   url,
   proj_id,
   token = NULL,
@@ -117,12 +117,12 @@ amsync_project <- function(
     invisible(proj)
   }
 
-  class(proj) <- "amsync_project"
+  class(proj) <- "autosync_project"
   proj
 }
 
 #' @export
-print.amsync_project <- function(x, ...) {
+print.autosync_project <- function(x, ...) {
   paths <- x$paths()
   cat("Automerge Project\n")
   cat("  Project:", x$proj_id, "\n")
