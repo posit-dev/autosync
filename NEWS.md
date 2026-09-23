@@ -1,3 +1,5 @@
+# autosync (development version)
+
 # autosync 0.2.0
 
 * Updates the UI of `sync_app()` to use a `shinyreact` frontend.
