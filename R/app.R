@@ -79,13 +79,25 @@ amsync_app <- function(
   }
   if (
     !is.null(token) &&
-      (!is.character(token) || length(token) != 1L || is.na(token) ||
+      (!is.character(token) ||
+        length(token) != 1L ||
+        is.na(token) ||
         !nzchar(token))
   ) {
-    stop("`token` must be a single non-empty string (from `sync_token()`), or NULL")
+    stop(
+      "`token` must be a single non-empty string (from `sync_token()`), or NULL"
+    )
   }
 
-  app <- build_amsync_app(server, proj_id, token, tls, timeout, files_key, debounce)
+  app <- build_amsync_app(
+    server,
+    proj_id,
+    token,
+    tls,
+    timeout,
+    files_key,
+    debounce
+  )
   shiny::runGadget(app, stopOnCancel = FALSE)
   invisible(NULL)
 }
@@ -100,7 +112,7 @@ amsync_app <- function(
 #' [shinyreact::page_react()]; the server publishes the screen state, file tree,
 #' sign-in state, and open-file content as `reactive_output()`s the client
 #' reads, and reacts to the client's `input$*` events. R owns the Automerge
-#' documents throughout via [amsync_project()] and [install_editor_sync()].
+#' documents throughout via [amsync_project()] and `install_editor_sync()`.
 #'
 #' @return A [shiny::shinyApp()] object.
 #'
@@ -201,7 +213,11 @@ build_amsync_app <- function(
               issuer = if (nzchar(issuer)) issuer else oidc_issuer()
             ),
             error = function(e) {
-              notify(session, "error", paste("Authentication failed:", conditionMessage(e)))
+              notify(
+                session,
+                "error",
+                paste("Authentication failed:", conditionMessage(e))
+              )
               NULL
             }
           )
@@ -248,7 +264,11 @@ build_amsync_app <- function(
             list(doc = doc, base = base)
           },
           error = function(e) {
-            notify(session, "error", paste("Could not open file:", conditionMessage(e)))
+            notify(
+              session,
+              "error",
+              paste("Could not open file:", conditionMessage(e))
+            )
             NULL
           }
         )
@@ -384,7 +404,11 @@ connect_with_retry <- function(
       retry_pause()
     }
   }
-  notify(session, "error", paste("Connection failed:", conditionMessage(last_err)))
+  notify(
+    session,
+    "error",
+    paste("Connection failed:", conditionMessage(last_err))
+  )
   NULL
 }
 

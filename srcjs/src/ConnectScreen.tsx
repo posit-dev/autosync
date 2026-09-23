@@ -1,5 +1,5 @@
 // Connect screen: server URL + project ID, an optional OIDC sign-in flow (run in
-// R by amsync_token()), and Connect / Exit. Mirrors the former bslib connect card.
+// R by sync_token()), and Connect / Exit. Mirrors the former bslib connect card.
 // The R server prefills the fields via `output$init`; events fire R observers.
 
 import { React, useShinyEvent, useShinyInput, useShinyOutputValue } from "./shiny";

@@ -29,7 +29,9 @@ edit_doc <- function(doc, at = "text", ext = NULL, debounce = 300L) {
     stop("`at` must be a non-empty character path")
   }
   if (
-    !is.numeric(debounce) || length(debounce) != 1L || is.na(debounce) ||
+    !is.numeric(debounce) ||
+      length(debounce) != 1L ||
+      is.na(debounce) ||
       debounce < 0
   ) {
     stop("`debounce` must be a single non-negative number of milliseconds")
@@ -66,8 +68,11 @@ navigate_to_text <- function(doc, at) {
   }
   if (!inherits(node, "am_text")) {
     stop(
-      "Path ", paste(at, collapse = "/"), " is not a text object (got ",
-      paste(class(node), collapse = "/"), ")"
+      "Path ",
+      paste(at, collapse = "/"),
+      " is not a text object (got ",
+      paste(class(node), collapse = "/"),
+      ")"
     )
   }
   node
@@ -113,7 +118,7 @@ poll_doc_to_editor <- function(target, shown) {
 
 #' Wire the bidirectional editor <-> live-document sync onto a Shiny session
 #'
-#' Installs the two observers shared by [edit_in_shiny()] and [amsync_app()]'s
+#' Installs the two observers shared by `edit_in_shiny()` and [amsync_app()]'s
 #' browse screen: an outgoing one that writes debounced editor changes into the
 #' live document and pushes them, and an incoming one that polls the document
 #' and reflects remote changes back into the editor. Both read the open
