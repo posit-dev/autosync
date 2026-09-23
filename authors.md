@@ -12,7 +12,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/posit-dev/autosync/blob/main/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/posit-dev/autosync/blob/v0.2.0/DESCRIPTION)
 
 Gao C (2026). *autosync: 'Automerge' Sync Server and Client*. R package
 version 0.2.0, <https://posit-dev.github.io/autosync/>.
