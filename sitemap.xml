@@ -1,6 +1,6 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
 <url><loc>https://posit-dev.github.io/autosync/404.html</loc></url>
-<url><loc>https://posit-dev.github.io/autosync/CLAUDE.html</loc></url>
+<url><loc>https://posit-dev.github.io/autosync/AGENTS.html</loc></url>
 <url><loc>https://posit-dev.github.io/autosync/LICENSE-text.html</loc></url>
 <url><loc>https://posit-dev.github.io/autosync/authors.html</loc></url>
 <url><loc>https://posit-dev.github.io/autosync/index.html</loc></url>
@@ -18,8 +18,10 @@
 <url><loc>https://posit-dev.github.io/autosync/reference/list_documents.html</loc></url>
 <url><loc>https://posit-dev.github.io/autosync/reference/oidc_issuer.html</loc></url>
 <url><loc>https://posit-dev.github.io/autosync/reference/print.autosync_server.html</loc></url>
+<url><loc>https://posit-dev.github.io/autosync/reference/sync_app.html</loc></url>
 <url><loc>https://posit-dev.github.io/autosync/reference/sync_client.html</loc></url>
 <url><loc>https://posit-dev.github.io/autosync/reference/sync_fetch.html</loc></url>
+<url><loc>https://posit-dev.github.io/autosync/reference/sync_project.html</loc></url>
 <url><loc>https://posit-dev.github.io/autosync/reference/sync_server.html</loc></url>
 <url><loc>https://posit-dev.github.io/autosync/reference/sync_token.html</loc></url>
 <url><loc>https://posit-dev.github.io/autosync/reference/validate_token.html</loc></url>

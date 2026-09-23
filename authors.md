@@ -12,15 +12,15 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/posit-dev/autosync/blob/release/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/posit-dev/autosync/blob/main/DESCRIPTION)
 
 Gao C (2026). *autosync: 'Automerge' Sync Server and Client*. R package
-version 0.1.0, <https://posit-dev.github.io/autosync/>.
+version 0.2.0, <https://posit-dev.github.io/autosync/>.
 
     @Manual{,
       title = {autosync: 'Automerge' Sync Server and Client},
       author = {Charlie Gao},
       year = {2026},
-      note = {R package version 0.1.0},
+      note = {R package version 0.2.0},
       url = {https://posit-dev.github.io/autosync/},
     }
